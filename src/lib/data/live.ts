@@ -1,0 +1,348 @@
+import "server-only";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import fs from "node:fs";
+import path from "node:path";
+import { SOURCE_REGISTRY } from "./sources.registry";
+import { COMPANY_REGISTRY } from "./companies.registry";
+import { PODCAST_CHANNELS } from "./podcasts.registry";
+import type {
+  Archive,
+  ArchiveItem,
+  CompanyDossier,
+  CompanyGroup,
+  CompanyRef,
+  EnglishCard,
+  KnowledgeCard,
+  PodcastChannelWithHealth,
+  PodcastEpisode,
+  PodcastIntel,
+  PodcastItem,
+  PodcastShow,
+  SourceRef,
+  CaseStudy,
+} from "./types";
+import {
+  PODCAST_EPISODES,
+  CASE_STUDIES,
+  filterSignals,
+  filterCases,
+  getVerticalsFrom,
+  getTopicsFrom,
+  getCompanyDossiers,
+  buildKnowledgeCard,
+  buildPodcastIntel,
+  getCaseStudy,
+  buildContext,
+  buildBusinessEnglish,
+  getRelated,
+  getRelatedCompanies,
+  getRelatedCases,
+  getRelatedPodcasts,
+  getRelatedEnglish,
+  getRelatedSources,
+  getCompanyDossier,
+  getCompanyGroups,
+  getSourceIntel,
+  getSourceById,
+  getSourceGroups,
+  searchArchive,
+  getTodayIntelligence,
+  getTodayEdit,
+  formatDate,
+  relativeTime,
+  verticalOf,
+  getKnowledgeCard,
+  getPodcastIntel,
+  getTierACaseCount,
+} from "./archive";
+
+/* ─────────── 运行时数据源：Supabase 优先，本地 JSON 回退 ───────────
+   设计：采集管线写入 Supabase 后，网站在「访问时」实时取数，实现自动更新；
+   未配置 Supabase（本地开发 / 未连接）时回退到构建期 archive.json，保证可构建可运行。
+   同一份 Archive 形状，故 archive.ts 的全部纯派生函数（buildKnowledgeCard 等）直接复用。 */
+
+export const PAGE_SIZE = 24;
+
+let cache: Archive | null = null;
+let source: "supabase" | "json" | null = null;
+
+function jsonArchive(): Archive {
+  const file = path.join(process.cwd(), "data", "archive.json");
+  const raw = fs.readFileSync(file, "utf8");
+  const parsed = JSON.parse(raw) as Archive;
+  for (const item of [...parsed.signals, ...parsed.cases]) {
+    if (typeof item.thin !== "boolean") item.thin = false;
+    if (!item.thin && (item.wordCount < 800 || !item.blocks || item.blocks.length === 0)) {
+      item.thin = true;
+    }
+  }
+  // 补全运行期派生所需但 archive.json 未必含的数组
+  parsed.podcastShows = parsed.podcastShows ?? parsed.podcasts;
+  return parsed;
+}
+
+function sb(): SupabaseClient | null {
+  const url = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!url || !key) return null;
+  return createClient(url, key, { auth: { persistSession: false } });
+}
+
+async function supabaseArchive(client: SupabaseClient): Promise<Archive> {
+  const [
+    signalsRes,
+    casesRes,
+    podcastsRes,
+    englishRes,
+    sourcesRes,
+    companiesRes,
+    epiRes,
+    caseRes,
+    registryRes,
+    metaRes,
+  ] = await Promise.all([
+    client.from("signals").select("data"),
+    client.from("cases").select("data"),
+    client.from("podcasts").select("data"),
+    client.from("english").select("data"),
+    client.from("sources").select("data"),
+    client.from("company_refs").select("data"),
+    client.from("podcast_episodes").select("data"),
+    client.from("case_studies").select("data"),
+    client.from("company_registry").select("data"),
+    client.from("meta").select("value").eq("key", "archive").maybeSingle(),
+  ]);
+
+  // 关键：若核心表查询报错（最常见=表尚未建 / RLS 拦截），必须抛出，
+  // 让 getArchiveLive 回退本地 JSON。否则会静默返回空数据却仍标记为「supabase」，
+  // 导致页面空内容 + 假的「● 实时」徽标。
+  const coreErrs = [signalsRes, casesRes, podcastsRes, englishRes, sourcesRes, companiesRes]
+    .filter((r) => r.error)
+    .map((r) => r.error!.message);
+  if (coreErrs.length) {
+    throw new Error("Supabase 核心表读取失败: " + coreErrs.join("; "));
+  }
+
+  const signals = (signalsRes.data ?? []).map((r: { data: ArchiveItem }) => r.data);
+  const cases = (casesRes.data ?? []).map((r: { data: ArchiveItem }) => r.data);
+  const podcasts = (podcastsRes.data ?? []).map((r: { data: PodcastItem }) => r.data);
+  const english = (englishRes.data ?? []).map((r: { data: EnglishCard }) => r.data);
+  const sources = (sourcesRes.data ?? []).map((r: { data: SourceRef }) => r.data);
+  const companies = (companiesRes.data ?? []).map((r: { data: CompanyRef }) => r.data);
+  const episodes = (epiRes.data ?? []).map((r: { data: PodcastEpisode }) => r.data);
+  const caseStudies = (caseRes.data ?? []).map((r: { data: CaseStudy }) => r.data);
+  const registry = (registryRes.data ?? []).map((r: { data: unknown }) => r.data);
+
+  const meta = (metaRes.data?.value as { generatedAt?: string; stats?: Archive["stats"]; topics?: Archive["topics"] }) ?? {};
+
+  // 用 Supabase 数据覆盖本地注册表 / 单集 / 案例富化层
+  const LIVE_COMPANY_REGISTRY = registry.length ? (registry as typeof COMPANY_REGISTRY) : COMPANY_REGISTRY;
+  const LIVE_EPISODES = episodes.length ? episodes : PODCAST_EPISODES;
+  const LIVE_CASE_STUDIES = caseStudies.length ? caseStudies : CASE_STUDIES;
+
+  const archive: Archive = {
+    generatedAt: meta.generatedAt ?? new Date().toISOString(),
+    stats: meta.stats ?? {
+      signals: signals.length,
+      cases: cases.length,
+      podcasts: podcasts.length,
+      english: english.length,
+      companies: companies.length,
+      sources: sources.length,
+      withBody: signals.filter((s) => !s.thin).length,
+      withHero: signals.filter((s) => s.hero).length,
+    },
+    signals,
+    cases,
+    podcasts,
+    podcastShows: podcasts as unknown as Archive["podcastShows"],
+    english,
+    topics: meta.topics ?? [],
+    companies,
+    sources,
+  };
+
+  // 把运行期派生需要但 archive.json 未必包含的常量指向 Supabase 数据
+  liveOverrides.companyRegistry = LIVE_COMPANY_REGISTRY;
+  liveOverrides.episodes = LIVE_EPISODES;
+  liveOverrides.caseStudies = LIVE_CASE_STUDIES;
+  return archive;
+}
+
+/** 运行期派生层需要的「覆盖」数据（Supabase 优先） */
+export const liveOverrides: {
+  companyRegistry: typeof COMPANY_REGISTRY;
+  episodes: PodcastEpisode[];
+  caseStudies: CaseStudy[];
+} = {
+  companyRegistry: COMPANY_REGISTRY,
+  episodes: PODCAST_EPISODES,
+  caseStudies: CASE_STUDIES,
+};
+
+/** 统一入口：返回当前数据源的 Archive（缓存于模块生命周期） */
+export async function getArchiveLive(): Promise<Archive> {
+  if (cache) return cache;
+  const client = sb();
+  if (client) {
+    try {
+      cache = await supabaseArchive(client);
+      source = "supabase";
+      return cache;
+    } catch (e) {
+      console.error("[live] Supabase 读取失败，回退本地 JSON：", e);
+    }
+  }
+  cache = jsonArchive();
+  source = "json";
+  return cache;
+}
+
+/** 当前数据源模式（供页面展示「实时 / 本地」徽标） */
+export function liveSource(): "supabase" | "json" | "unknown" {
+  return source ?? "unknown";
+}
+
+/* ─────────── 分页工具 ─────────── */
+export interface Page<T> {
+  items: T[];
+  total: number;
+  page: number;
+  size: number;
+  pages: number;
+}
+
+export function paginate<T>(arr: T[], page = 1, size = PAGE_SIZE): Page<T> {
+  const safePage = Math.max(1, page | 0);
+  const start = (safePage - 1) * size;
+  return {
+    items: arr.slice(start, start + size),
+    total: arr.length,
+    page: safePage,
+    size,
+    pages: Math.max(1, Math.ceil(arr.length / size)),
+  };
+}
+
+/* ─────────── 查询（异步，Supabase/JSON 统一） ─────────── */
+
+export async function getSignalsLive(opts: Parameters<typeof filterSignals>[1] = {}): Promise<ArchiveItem[]> {
+  return filterSignals(await getArchiveLive(), opts);
+}
+
+export async function getCasesLive(opts: Parameters<typeof filterCases>[1] = {}): Promise<ArchiveItem[]> {
+  return filterCases(await getArchiveLive(), opts);
+}
+
+export async function getCompaniesLive(limit?: number): Promise<CompanyRef[]> {
+  const list = (await getArchiveLive()).companies;
+  return limit ? list.slice(0, limit) : list;
+}
+
+export async function getPodcastChannelsLive(): Promise<PodcastChannelWithHealth[]> {
+  const a = await getArchiveLive();
+  if (liveOverrides.episodes.length) {
+    const byCh = new Map<string, number>();
+    for (const e of liveOverrides.episodes) byCh.set(e.channelId, (byCh.get(e.channelId) ?? 0) + 1);
+    return (a.podcasts as unknown as PodcastChannelWithHealth[]).map((c) => ({
+      ...c,
+      health: { ok: true, count: byCh.get(c.id) ?? 0, lastSuccessAt: "", source: "supabase" },
+    }));
+  }
+  return PODCAST_CHANNELS.map((c) => ({
+    ...c,
+    health: { ok: false, count: 0, lastSuccessAt: "", source: "" },
+  }));
+}
+
+export async function getPodcastEpisodesLive(channelId?: string): Promise<PodcastEpisode[]> {
+  const eps = liveOverrides.episodes;
+  return channelId ? eps.filter((e) => e.channelId === channelId) : eps;
+}
+
+export async function getPodcastsLive(limit?: number): Promise<PodcastItem[]> {
+  const list = (await getArchiveLive()).podcasts;
+  return limit ? list.slice(0, limit) : list;
+}
+
+export async function getEnglishLive(limit?: number): Promise<EnglishCard[]> {
+  const list = (await getArchiveLive()).english;
+  return limit ? list.slice(0, limit) : list;
+}
+
+export async function getSourcesLive(): Promise<SourceRef[]> {
+  return (await getArchiveLive()).sources;
+}
+
+export async function getVerticalsLive() {
+  return getVerticalsFrom(await getArchiveLive());
+}
+
+export async function getTopicsLive() {
+  return getTopicsFrom(await getArchiveLive());
+}
+
+export async function getCompanyDossiersLive(group?: CompanyGroup): Promise<CompanyDossier[]> {
+  return getCompanyDossiers(group, await getArchiveLive());
+}
+
+export async function getItemByIdLive(id: string): Promise<ArchiveItem | PodcastItem | undefined> {
+  const a = await getArchiveLive();
+  return [...a.signals, ...a.cases, ...a.podcasts].find((s) => s.id === id);
+}
+
+export async function getItemsByIdsLive(ids: string[]): Promise<ArchiveItem[]> {
+  const a = await getArchiveLive();
+  const map = new Map([...a.signals, ...a.cases, ...a.podcasts].map((i) => [i.id, i]));
+  return ids.map((i) => map.get(i)).filter(Boolean) as ArchiveItem[];
+}
+
+export async function getCompanyByIdLive(id: string): Promise<CompanyRef | undefined> {
+  return (await getArchiveLive()).companies.find((c) => c.id === id);
+}
+
+export async function getCompanyDossierLive(id: string): Promise<CompanyDossier | undefined> {
+  return getCompanyDossiersLive().then((d) => d.find((x) => x.id === id));
+}
+
+export async function getPodcastEpisodeByIdLive(id: string): Promise<PodcastEpisode | undefined> {
+  return liveOverrides.episodes.find((e) => e.id === id);
+}
+
+export function getCaseStudyLive(id: string): CaseStudy | undefined {
+  return liveOverrides.caseStudies.find((c) => c.id === id);
+}
+
+/* ─────────── 复用 archive.ts 的纯派生（详情页结构化卡片） ─────────── */
+export {
+  buildKnowledgeCard,
+  buildPodcastIntel,
+  getCaseStudy,
+  buildContext,
+  buildBusinessEnglish,
+  getRelated,
+  getRelatedCompanies,
+  getRelatedCases,
+  getRelatedPodcasts,
+  getRelatedEnglish,
+  getRelatedSources,
+  getCompanyDossier,
+  getCompanyGroups,
+  getSourceIntel,
+  getSourceById,
+  getSourceGroups,
+  getKnowledgeCard,
+  getPodcastIntel,
+  getTierACaseCount,
+  formatDate,
+  relativeTime,
+  verticalOf,
+  getTodayIntelligence,
+  getTodayEdit,
+  searchArchive,
+} from "./archive";
+
+/** 搜索（复用 archive.ts 逻辑，传入 live archive） */
+export async function searchArchiveLive(q: string, limit = 60): Promise<ArchiveItem[]> {
+  return searchArchive(q, limit, await getArchiveLive());
+}
