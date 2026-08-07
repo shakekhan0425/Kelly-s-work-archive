@@ -2499,3 +2499,127 @@ a:hover {
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
+
+/* ============================================================
+   UI Final Polish · Light Editorial × Film Travel Mood
+   ============================================================ */
+
+/* 1. 全局点击反馈 ≤ 100ms：可交互元素按下时轻微内沉 */
+a, button, .btn, .chip, .icon-btn, .fav-btn,
+.editorial-card, .stat-tile, .profile-card,
+.co-card, .src-card, .tool-card, .ti-change, .ti-feature,
+.list-row, .pod-row, .en-card, .en-brief-card {
+  transition: transform 0.08s ease-out, box-shadow 0.14s ease, border-color 0.14s ease, background 0.12s ease;
+}
+a:active, button:active, .btn:active, .chip:active, .icon-btn:active, .fav-btn:active,
+.editorial-card:active, .stat-tile:active, .profile-card:active,
+.co-card:active, .src-card:active, .tool-card:active, .ti-change:active, .ti-feature:active,
+.list-row:active, .pod-row:active, .en-card:active, .en-brief-card:active {
+  transform: scale(0.992);
+}
+
+/* 2. Ken Burns：主图慢速呼吸缩放，hover 暂停 */
+.lead-hero, .read-hero, .card-img, .list-thumb {
+  overflow: hidden;
+}
+.lead-hero img, .read-hero img, .card-img, .list-thumb {
+  animation: kenBurns 22s ease-in-out infinite alternate;
+}
+.lead-hero:hover img, .read-hero:hover img,
+.editorial-card:hover .card-img, .list-row:hover .list-thumb {
+  animation-play-state: paused;
+}
+@keyframes kenBurns {
+  0% { transform: scale(1); }
+  100% { transform: scale(1.045); }
+}
+
+/* 3. 更轻盈的卡片：更细边框、更大圆角、柔和阴影 */
+.editorial-card, .stat-tile, .co-card, .src-card, .tool-card,
+.en-card, .en-brief-card, .aside-box, .profile-card, .paper-panel {
+  border-radius: 6px;
+  box-shadow: 0 1px 2px rgba(25, 24, 23, 0.04);
+}
+.editorial-card:hover, .co-card:hover, .src-card:hover, .tool-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 24px rgba(25, 24, 23, 0.08);
+}
+
+/* 4. 酒红面积控制：仅用于关键强调 */
+.binder-link[aria-current="page"] {
+  background: rgba(169, 42, 44, 0.08);
+}
+.btn-primary {
+  background: var(--color-archive-red);
+}
+.btn-primary:hover {
+  background: var(--color-oxblood);
+}
+
+/* 5. 列表资讯更编辑感：row hover 时标题变酒红、背景微亮 */
+.list-row {
+  padding: 18px 0;
+  border-bottom: 1px solid var(--color-line);
+}
+.list-row:hover {
+  background: linear-gradient(90deg, rgba(231, 222, 208, 0.35) 0%, transparent 70%);
+}
+
+/* 6. Skeleton 细化 */
+.skeleton {
+  border-radius: 4px;
+  opacity: 0.7;
+}
+.skeleton-title { height: 18px; width: 62%; margin-bottom: 10px; }
+.skeleton-line { height: 12px; width: 100%; margin-bottom: 8px; }
+.skeleton-thumb { width: 100%; aspect-ratio: 4 / 3; }
+
+/* 7. 减少动效 */
+@media (prefers-reduced-motion: reduce) {
+  .lead-hero img, .read-hero img, .card-img, .list-thumb {
+    animation: none;
+  }
+  a, button, .btn, .chip, .editorial-card, .stat-tile, .co-card, .src-card, .tool-card,
+  .ti-change, .ti-feature, .list-row, .pod-row {
+    transition: none;
+  }
+  a:active, button:active, .editorial-card:active, .stat-tile:active {
+    transform: none;
+  }
+}
+
+/* 8. 胶片旅行感 Hero：首页封面头图渐变遮罩 + 复古胶片边框 */
+.hero-film {
+  position: relative;
+  border-radius: 2px;
+  overflow: hidden;
+}
+.hero-film::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    rgba(25, 24, 23, 0) 50%,
+    rgba(25, 24, 23, 0.55) 100%
+  );
+  mix-blend-mode: multiply;
+}
+.hero-film img {
+  filter: saturate(0.92) contrast(1.02);
+}
+
+/* 9. 手写元素控制：仅允许少量装饰倾斜，且角度≤2deg */
+.tape {
+  transform: rotate(-1.2deg);
+}
+.paper-panel.torn {
+  border-radius: 2px 5px 2px 5px;
+}
+
+/* 10. 聚焦环更纤细 */
+:focus-visible {
+  outline: 1.5px solid var(--color-archive-red);
+  outline-offset: 2px;
+}
