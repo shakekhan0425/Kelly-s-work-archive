@@ -2618,6 +2618,26 @@ a:active, button:active, .btn:active, .chip:active, .icon-btn:active, .fav-btn:a
   border-radius: 2px 5px 2px 5px;
 }
 
+/* 10. 路由级淡入过渡（与骨架屏 / 点击反馈构成连贯体验） */
+.route-fade {
+  animation: routeIn 0.2s ease both;
+}
+@keyframes routeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .route-fade {
+    animation: none;
+  }
+}
+
 /* 10. 聚焦环更纤细 */
 :focus-visible {
   outline: 1.5px solid var(--color-archive-red);
