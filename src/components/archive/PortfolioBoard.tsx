@@ -158,7 +158,10 @@ export default function PortfolioBoard({
                     <button
                       type="button"
                       className="pf-xhs-pick"
-                      onClick={() => newFromPost(post)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        newFromPost(post);
+                      }}
                     >
                       生成 STAR →
                     </button>
@@ -171,7 +174,7 @@ export default function PortfolioBoard({
       </section>
 
       {editing ? (
-        <StarEditor
+        <StarEditorModal
           key={editing.id}
           initial={editing}
           companies={companies}
@@ -217,7 +220,7 @@ export default function PortfolioBoard({
   );
 }
 
-function StarEditor({
+function StarEditorModal({
   initial,
   companies,
   onSave,
@@ -231,47 +234,86 @@ function StarEditor({
   const [s, setS] = useState<Story>(initial);
   const set = (k: keyof Story, v: string) => setS((p) => ({ ...p, [k]: v }));
   return (
-    <div className="pf-editor">
-      <input
-        className="tool-input"
-        value={s.title}
-        onChange={(e) => set("title", e.target.value)}
-        placeholder="故事标题"
-      />
-      {(["situation", "task", "action", "result", "lessons"] as const).map((k, i) => (
-        <div key={k}>
-          <label className="fld-label">
-            {["情境 S", "任务 T", "行动 A", "结果 R", "沉淀 L"][i]}
-          </label>
-          <textarea className="tool-input tall" value={s[k]} onChange={(e) => set(k, e.target.value)} />
+    <div
+      className="pf-modal-backdrop"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onCancel();
+      }}
+      role="dialog"
+      aria-modal="true"
+      aria-label="编辑 STAR 故事"
+    >
+      <div className="pf-modal">
+        <div className="pf-modal-head">
+          <div>
+            <div className="pf-modal-kicker">STAR Story Editor</div>
+            <h3 className="pf-modal-title">{s.title || "未命名故事"}</h3>
+          </div>
+          <button type="button" className="pf-modal-close" onClick={onCancel} aria-label="关闭">
+            ×
+          </button>
         </div>
-      ))}
-      <label className="fld-label">关联公司（My Fit 论据）</label>
-      <select
-        className="tool-input"
-        value=""
-        onChange={(e) =>
-          e.target.value &&
-          set(
-            "lessons",
-            s.lessons + `\n[关联 ${companies.find((c) => c.id === e.target.value)?.name}]`,
-          )
-        }
-      >
-        <option value="">+ 关联公司…</option>
-        {companies.map((c) => (
-          <option key={c.id} value={c.id}>
-            {c.name}
-          </option>
-        ))}
-      </select>
-      <div className="pf-editor-actions">
-        <button className="btn-primary" onClick={() => onSave(s)}>
-          保存
-        </button>
-        <button className="btn-ghost" onClick={onCancel}>
-          取消
-        </button>
+
+        <div className="pf-modal-body">
+          <label className="fld-label">故事标题</label>
+          <input
+            className="tool-input"
+            value={s.title}
+            onChange={(e) => set("title", e.target.value)}
+            placeholder="例如：小红书 × 完美日记 明星同款 campaign"
+          />
+
+          {(["situation", "task", "action", "result", "lessons"] as const).map((k, i) => (
+            <div key={k}>
+              <label className="fld-label">
+                {["情境 S", "任务 T", "行动 A", "结果 R", "沉淀 L"][i]}
+              </label>
+              <textarea
+                className="tool-input tall"
+                value={s[k]}
+                onChange={(e) => set(k, e.target.value)}
+                placeholder={
+                  [
+                    "当时面临什么背景与问题？",
+                    "你的目标/KPI 是什么？",
+                    "你具体做了什么？",
+                    "结果如何（尽量用数据）？",
+                    "可复用的方法论或认知",
+                  ][i]
+                }
+              />
+            </div>
+          ))}
+
+          <label className="fld-label">关联公司（My Fit 论据）</label>
+          <select
+            className="tool-input"
+            value=""
+            onChange={(e) =>
+              e.target.value &&
+              set(
+                "lessons",
+                s.lessons + `\n[关联 ${companies.find((c) => c.id === e.target.value)?.name}]`,
+              )
+            }
+          >
+            <option value="">+ 关联公司…</option>
+            {companies.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="pf-modal-foot">
+          <button className="btn btn-primary" type="button" onClick={() => onSave(s)}>
+            保存故事
+          </button>
+          <button className="btn btn-ghost" type="button" onClick={onCancel}>
+            取消
+          </button>
+        </div>
       </div>
     </div>
   );

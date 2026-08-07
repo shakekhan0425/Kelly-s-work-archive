@@ -46,43 +46,22 @@ export default async function DeskPage() {
   return (
     <ArchiveShell>
       {/* A. Cover Header — Film Travel Hero */}
-      <section className="paper-panel torn desk-hero" style={{ padding: 0, marginBottom: 22, overflow: "hidden" }}>
-        <span className="tape" aria-hidden="true">
-          Daily Desk
-        </span>
+      <section className="desk-hero-wrap" style={{ marginBottom: 28 }}>
         <div className="desk-hero-grid">
-          <div className="desk-hero-stamp" aria-hidden="true">
-            <div className="desk-hero-stamp-inner">
-              <span>Archive</span>
-              <span>Today</span>
-            </div>
-          </div>
           <div className="desk-hero-text">
-            <div className="eyebrow" style={{ marginBottom: 8 }}>
-              Today’s Issue · {today}
+            <div className="desk-hero-meta">
+              <span className="desk-hero-issue">Today’s Issue</span>
+              <span className="desk-hero-date">{today}</span>
             </div>
             <h1 className="desk-hero-title">今日工作档案馆</h1>
             <p className="desk-hero-lead">
               每天从真实来源中整理市场情报、品牌案例与公司研究，为你的营销判断提供事实基础。
             </p>
             <div className="desk-hero-tags">
-              <span className="issue-no">No. 001</span>
-              <span className="stamp">实时抓取</span>
-              <span className="stamp">情报 {stats.signals}</span>
-              <span className="stamp">案例 {stats.cases}</span>
-              <span className="stamp">播客 {stats.podcasts}</span>
+              <span className="desk-hero-pill">情报 {stats.signals}</span>
+              <span className="desk-hero-pill">案例 {stats.cases}</span>
+              <span className="desk-hero-pill">播客 {stats.podcasts}</span>
             </div>
-            {src === "supabase" ? (
-              <span className="live-badge" title="数据来自 Supabase，实时更新">● 实时</span>
-            ) : src === "json" ? (
-              <span
-                className="live-badge"
-                style={{ background: "#eef0f3", color: "#6b7280", borderColor: "#e2e5ea" }}
-                title="未连接 Supabase，使用本地归档数据"
-              >
-                ● 本地档案
-              </span>
-            ) : null}
             <div className="desk-hero-cta">
               <Link href="/signals" className="btn btn-primary">
                 浏览最新情报 →
@@ -90,26 +69,31 @@ export default async function DeskPage() {
               <Link href="/sources" className="btn btn-ghost">
                 来源体系
               </Link>
+              {src === "supabase" ? (
+                <span className="desk-hero-live" title="数据来自 Supabase，实时更新">● 实时</span>
+              ) : (
+                <span className="desk-hero-live local" title="未连接 Supabase，使用本地归档数据">● 本地档案</span>
+              )}
             </div>
           </div>
-          <div className="hero-film desk-hero-img">
+          <div className="desk-hero-img">
             {recent[0]?.hero ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={recent[0].hero} alt="" loading="eager" />
             ) : null}
             <div className="desk-hero-cap">
-              <span className="desk-hero-cap-k">{today}</span>
-              <span className="desk-hero-cap-t">
-                {recent[0]?.title ?? "每日工作档案馆"}
-              </span>
+              <span>{today}</span>
+              <span>{recent[0]?.title ?? "每日工作档案馆"}</span>
             </div>
+            <span className="desk-hero-stamp" aria-hidden="true">
+              Archive<br />Today
+            </span>
           </div>
         </div>
       </section>
 
       {/* B. Today's Intelligence — 杂志版两栏：左侧列表 / 右侧卡片 */}
-      <section className="paper-panel" style={{ padding: 18, marginBottom: 22 }}>
-        <span className="bookmark-fold" aria-hidden="true" />
+      <section style={{ marginBottom: 30 }}>
         <SectionHeader eyebrow="Today’s Intelligence" title="今日情报" />
         <div className="ti-grid">
           <div className="ti-changes">
