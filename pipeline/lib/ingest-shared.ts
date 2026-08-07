@@ -8,7 +8,7 @@ import { SOURCE_REGISTRY } from "../../src/lib/data/sources.registry";
 import type { ArchiveItem, Block, SourceIntel } from "../../src/lib/data/types";
 
 export function sb() {
-  return createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, {
+  return createClient((process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL)!, process.env.SUPABASE_SERVICE_ROLE_KEY!, {
     auth: { persistSession: false },
   });
 }

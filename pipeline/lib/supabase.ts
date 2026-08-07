@@ -5,7 +5,7 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
  * 前端工作台使用 NEXT_PUBLIC_SUPABASE_ANON_KEY（仅匿名读）。
  */
 export function getSupabaseAdmin(): SupabaseClient {
-  const url = process.env.SUPABASE_URL;
+  const url = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!url || !key) {
     throw new Error(
