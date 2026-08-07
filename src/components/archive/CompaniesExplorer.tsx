@@ -5,12 +5,18 @@ import { ScrollKeeper } from "@/components/archive/ScrollKeeper";
 import { saveReturnContext } from "@/lib/navigation";
 import type { CompanyDossier } from "@/lib/data/types";
 
-export interface CompanyGroupInfo {
-  group: string;
+export interface CompanyCategoryInfo {
+  category: string;
   label: string;
   count: number;
-  live?: number;
+  tierA: number;
 }
+
+const TIER_LABEL: Record<string, string> = {
+  A: "A 类",
+  B: "B 类",
+  watchlist: "观察",
+};
 
 export function CompaniesExplorer({
   dossiers,
@@ -18,10 +24,10 @@ export function CompaniesExplorer({
   group,
 }: {
   dossiers: CompanyDossier[];
-  groups: CompanyGroupInfo[];
+  groups: CompanyCategoryInfo[];
   group: string;
 }) {
-  const filtered = group ? dossiers.filter((d) => d.group === group) : dossiers;
+  const filtered = group ? dossiers.filter((d) => d.category === group) : dossiers;
 
   return (
     <>
@@ -36,9 +42,9 @@ export function CompaniesExplorer({
         </Link>
         {groups.map((g) => (
           <Link
-            key={g.group}
-            href={`/companies?g=${g.group}`}
-            className={`filter-chip ${group === g.group ? "is-on" : ""}`}
+            key={g.category}
+            href={`/companies?g=${g.category}`}
+            className={`filter-chip ${group === g.category ? "is-on" : ""}`}
           >
             {g.label} <span className="fc-n">{g.count}</span>
           </Link>
@@ -64,20 +70,17 @@ export function CompaniesExplorer({
             <div className="co-top">
               <span className="co-name">{d.name}</span>
               <span className={`tier ${d.tier}`}>
-                {d.tier === "live" ? "有信号" : "策划"}
+                {TIER_LABEL[d.tier] ?? d.tier}
               </span>
             </div>
             <div className="co-group">
-              {groups.find((g) => g.group === d.group)?.label || d.group}
+              {groups.find((g) => g.category === d.category)?.label || d.category}
             </div>
             <p className="co-overview">{d.overview}</p>
             <div className="co-foot">
-              {d.mentions ? (
-                <span className="co-mentions">{d.mentions} 条信号</span>
-              ) : null}
-              {d.openRoles.length ? (
+              {d.targetRoles.length ? (
                 <span className="co-roles">
-                  {d.openRoles.slice(0, 2).join(" · ")}
+                  {d.targetRoles.slice(0, 2).join(" · ")}
                 </span>
               ) : null}
             </div>

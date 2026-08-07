@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ArchiveShell } from "@/components/archive/ArchiveShell";
-import { getCompanyDossiers, getEnglish } from "@/lib/data/archive";
+import { getCompanyDossiers, getEnglish, CATEGORY_LABELS } from "@/lib/data/archive";
 
 export const metadata = { title: "面试题库 · WORK / Archive" };
 
@@ -47,7 +47,7 @@ export default function InterviewPage() {
                   <Link href={`/companies/${d.id}`} className="crumb">
                     {d.name}
                   </Link>
-                  <span className="stamp stamp-coral">{d.group}</span>
+                  <span className="stamp stamp-coral">{CATEGORY_LABELS[d.category]}</span>
                 </div>
                 <ul className="iv-questions">
                   {d.interviewQuestions.map((q, i) => (

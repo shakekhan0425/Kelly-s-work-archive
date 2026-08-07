@@ -5,6 +5,7 @@ import ArticleBody from "@/components/archive/ArticleBody";
 import { ItemBrief } from "@/components/archive/ItemRow";
 import NotesPanel from "@/components/archive/NotesPanel";
 import FavoriteButton from "@/components/archive/FavoriteButton";
+import { ReadingTracker } from "@/components/archive/ReadingTracker";
 import { BackButton } from "@/components/archive/BackButton";
 import {
   getItemByIdLive,
@@ -44,6 +45,7 @@ export default async function SignalDetail({ params }: { params: Promise<{ id: s
 
   return (
     <ArchiveShell>
+      <ReadingTracker id={item.id} title={item.title} href={`/signals/${item.id}`} />
       <article className="read-wrap">
         {/* 返回 */}
         <div className="read-back">
@@ -197,7 +199,7 @@ export default async function SignalDetail({ params }: { params: Promise<{ id: s
                   {companies.map((c) => (
                     <Link key={c.id} href={`/companies/${c.id}`} className="rel-card">
                       <div className="rel-name">{c.name}</div>
-                      <div className="rel-sub">{c.group} · {c.overview.slice(0, 48)}…</div>
+                      <div className="rel-sub">{c.category} · {c.overview.slice(0, 48)}…</div>
                     </Link>
                   ))}
                 </div>

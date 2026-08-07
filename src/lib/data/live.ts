@@ -9,7 +9,7 @@ import type {
   Archive,
   ArchiveItem,
   CompanyDossier,
-  CompanyGroup,
+  CompanyCategory,
   CompanyRef,
   EnglishCard,
   KnowledgeCard,
@@ -282,8 +282,10 @@ export async function getTopicsLive() {
   return getTopicsFrom(await getArchiveLive());
 }
 
-export async function getCompanyDossiersLive(group?: CompanyGroup): Promise<CompanyDossier[]> {
-  return getCompanyDossiers(group, await getArchiveLive());
+export async function getCompanyDossiersLive(category?: CompanyCategory): Promise<CompanyDossier[]> {
+  // 公司档案是代码内注册表（COMPANY_REGISTRY），与 Supabase 的信号流分离，
+  // 保证部署即完整、不依赖建表进度。
+  return getCompanyDossiers(category);
 }
 
 export async function getItemByIdLive(id: string): Promise<ArchiveItem | PodcastItem | undefined> {

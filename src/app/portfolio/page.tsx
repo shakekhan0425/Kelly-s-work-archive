@@ -6,7 +6,7 @@ export const metadata = { title: "作品集 · WORK / Archive" };
 
 export default function PortfolioPage() {
   const cases = getCases().map((c) => ({ id: c.id, title: c.title, brands: c.brands, topics: c.topics, url: c.url }));
-  const companies = getCompanyDossiers().map((d) => ({ id: d.id, name: d.name, group: d.group }));
+  const companies = getCompanyDossiers().map((d) => ({ id: d.id, name: d.name, category: d.category }));
   return (
     <ArchiveShell>
       <PortfolioBoard cases={cases} companies={companies} />

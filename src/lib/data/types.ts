@@ -153,37 +153,59 @@ export interface PodcastIntel {
 
 /* ─────────── Company Dossier（Phase 5） ─────────── */
 
-export type CompanyTier = 'live' | 'curated';
-export type CompanyGroup = 'Beauty' | 'Platform' | 'Luxury' | 'Agency' | 'Other';
+export type CompanyCategory =
+  | 'Global Beauty & Personal Care'
+  | 'China Beauty & Personal Care'
+  | 'China Internet & Platforms'
+  | 'Global Technology & Platforms'
+  | 'FMCG & Consumer Multinationals'
+  | 'Luxury & Fashion Groups'
+  | 'Sports, Retail & Lifestyle Brands'
+  | 'China Consumer Brands'
+  | 'Advertising, Consulting & Research Firms';
 
+export type CompanyTier = 'A' | 'B' | 'watchlist';
+
+/**
+ * Company Dossier（v3）。
+ * 23 个标准字段 + 元数据（id / name / aliases / category / tier）。
+ * 数据均为真实公开事实；缺失字段如实标注，绝不编造。
+ * tier: A=深度档案(≥90% 字段) / B=基础档案(≥60% 字段) / watchlist=观察池(不进首页推荐)。
+ * 旗下具体品牌/产品/Campaign 进入 Brand Casebook，本表以集团与公司为主。
+ */
 export interface CompanyDossier {
   id: string;
   name: string;
-  group: CompanyGroup;
-  /** live=有真实抓取信号关联 / curated=策划资料（DEMO，明确区分） */
+  /** 中文名 / 别名 */
+  aliases?: string[];
+  category: CompanyCategory;
   tier: CompanyTier;
   overview: string;
-  /** 发展时间线（关键节点，真实公开事实） */
-  timeline?: string[];
+  timeline: string[];
   businessModel: string;
-  /** 收入逻辑 / 变现方式 */
-  revenueLogic?: string;
+  revenueLogic: string;
+  /** 近三年经营/财务基线（营收、增速、利润等真实公开数据，含年份与币种） */
+  threeYearBaseline: string[];
+  /** 业务板块占比 */
+  segmentMix: string[];
+  /** 区域分布 */
+  regionMix: string[];
   brandPortfolio: string[];
+  consumerSegments: string[];
+  channelStrategy: string[];
   chinaStrategy: string;
-  /** 目标消费者画像 */
-  consumers?: string;
+  competitorBenchmark: string[];
   recentMoves: string[];
   marketingCases: string[];
-  competitors: string[];
-  culture: string;
-  openRoles: string[];
+  cultureEvidence: string[];
+  targetRoles: string[];
   interviewQuestions: string[];
-  myFit?: string;
-  /** 参考资料来源 id / 名称 */
-  sources?: string[];
-  /** 运行时注入：真实信号提及数 */
-  mentions?: number;
-  signalIds?: string[];
+  myFit: string;
+  risks: string[];
+  tradeOffs: string[];
+  sources: string[];
+  /** 数据更新日期 ISO（如 2026-08-06） */
+  updatedAt: string;
 }
 
 /** Podcast 频道（真实 RSS 源元数据，注册表） */

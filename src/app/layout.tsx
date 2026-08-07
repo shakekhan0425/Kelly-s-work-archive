@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { PRODUCT } from "@/lib/config/product";
 import { PwaRegister } from "@/components/archive/PwaRegister";
+import { MobileTabBar } from "@/components/archive/MobileTabBar";
 
 export const metadata: Metadata = {
   title: {
@@ -19,9 +20,10 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#791925",
+  themeColor: "#0b0e14",
   width: "device-width",
   initialScale: 1,
+  viewportFit: "cover",
 };
 
 export default function RootLayout({
@@ -45,6 +47,7 @@ export default function RootLayout({
       </head>
       <body>
         {children}
+        <MobileTabBar />
         <PwaRegister />
       </body>
     </html>

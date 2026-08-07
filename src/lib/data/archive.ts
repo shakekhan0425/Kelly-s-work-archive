@@ -5,7 +5,7 @@ import type {
   Archive,
   ArchiveItem,
   CompanyDossier,
-  CompanyGroup,
+  CompanyCategory,
   CompanyRef,
   EnglishCard,
   IndustryAnalysis,
@@ -357,8 +357,8 @@ export function getTodayIntelligence(archive: Archive = getArchive()): {
     if (!changes.includes(s)) changes.push(s);
   }
   const caseItem = archive.cases[0];
-  const allCos = getCompanyDossiers(undefined, archive);
-  const company = allCos.find((d) => d.tier === 'live') ?? allCos[0];
+  const allCos = getCompanyDossiers();
+  const company = allCos.find((d) => d.tier === 'A') ?? allCos[0];
   const podcast = archive.podcasts[0];
   const english = archive.english[0];
   return { changes, caseItem, company, podcast, english };
@@ -571,50 +571,51 @@ export const COMPANY_ALIASES: Record<string, string[]> = {
   richemont: ['richemont', 'cartier', '卡地亚'],
 };
 
-/** 公司研究库：策划 dossier + 运行时关联的真实信号提及 */
-export function getCompanyDossiers(group?: CompanyGroup, a: Archive = getArchive()): CompanyDossier[] {
-  const allItems = [...a.signals, ...a.cases, ...a.podcasts];
-  const dossiers = COMPANY_REGISTRY.map((d) => {
-    const aliases = COMPANY_ALIASES[d.id] ?? [d.name.toLowerCase()];
-    let mentions = 0;
-    const signalIds: string[] = [];
-    for (const it of allItems) {
-      const hay = `${it.title} ${it.summary} ${it.brands.join(' ')} ${it.topics.join(' ')}`.toLowerCase();
-      if (aliases.some((al) => hay.includes(al))) {
-        mentions += 1;
-        if (signalIds.length < 12) signalIds.push(it.id);
-      }
-    }
-    return {
-      ...d,
-      mentions,
-      signalIds,
-      tier: (mentions > 0 ? 'live' : d.tier) as CompanyDossier['tier'],
-    };
-  });
-  return group ? dossiers.filter((d) => d.group === group) : dossiers;
+/** 公司研究库（v3）：9 大分类、Tier A/B/watchlist 三档。 */
+export const CATEGORY_ORDER: CompanyCategory[] = [
+  'Global Beauty & Personal Care',
+  'China Beauty & Personal Care',
+  'China Internet & Platforms',
+  'Global Technology & Platforms',
+  'FMCG & Consumer Multinationals',
+  'Luxury & Fashion Groups',
+  'Sports, Retail & Lifestyle Brands',
+  'China Consumer Brands',
+  'Advertising, Consulting & Research Firms',
+];
+
+export const CATEGORY_LABELS: Record<CompanyCategory, string> = {
+  'Global Beauty & Personal Care': '全球美妆个护',
+  'China Beauty & Personal Care': '中国美妆个护',
+  'China Internet & Platforms': '中国互联网与平台',
+  'Global Technology & Platforms': '全球科技与平台',
+  'FMCG & Consumer Multinationals': '快消与消费外企',
+  'Luxury & Fashion Groups': '奢侈品与时尚集团',
+  'Sports, Retail & Lifestyle Brands': '运动零售与生活方式',
+  'China Consumer Brands': '中国消费品牌',
+  'Advertising, Consulting & Research Firms': '广告咨询与研究',
+};
+
+export function getCompanyDossiers(category?: CompanyCategory): CompanyDossier[] {
+  const all = COMPANY_REGISTRY;
+  return category ? all.filter((d) => d.category === category) : all;
 }
 
 export function getCompanyDossier(id: string): CompanyDossier | undefined {
   return getCompanyDossiers().find((d) => d.id === id);
 }
 
-export function getCompanyGroups(): { group: CompanyGroup; label: string; count: number; live: number }[] {
+export function getCompanyGroups(): { category: CompanyCategory; label: string; count: number; tierA: number }[] {
   const all = getCompanyDossiers();
-  const order: CompanyGroup[] = ['Beauty', 'Platform', 'Luxury', 'Agency', 'Other'];
-  const labelMap: Record<CompanyGroup, string> = {
-    Beauty: '美妆',
-    Platform: '平台',
-    Luxury: '奢侈',
-    Agency: '代理商',
-    Other: '其他',
-  };
-  return order
-    .map((group) => {
-      const items = all.filter((d) => d.group === group);
-      return { group, label: labelMap[group], count: items.length, live: items.filter((d) => d.tier === 'live').length };
-    })
-    .filter((g) => g.count > 0);
+  return CATEGORY_ORDER.map((category) => {
+    const items = all.filter((d) => d.category === category);
+    return {
+      category,
+      label: CATEGORY_LABELS[category],
+      count: items.length,
+      tierA: items.filter((d) => d.tier === 'A').length,
+    };
+  }).filter((g) => g.count > 0);
 }
 
 /* ─────────── Knowledge Card（Phase 3：详情页结构） ───────────

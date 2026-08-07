@@ -29,7 +29,7 @@ interface CaseItem {
 interface CoItem {
   id: string;
   name: string;
-  group: string;
+  category: string;
 }
 
 export default function StudioBoard({

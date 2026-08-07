@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { ArchiveShell } from "@/components/archive/ArchiveShell";
 import NotesPanel from "@/components/archive/NotesPanel";
 import { BackButton } from "@/components/archive/BackButton";
+import { ReadingTracker } from "@/components/archive/ReadingTracker";
 import {
   getPodcastEpisodeByIdLive,
   getPodcastChannelsLive,
@@ -26,6 +27,7 @@ export default async function PodcastDetail({ params }: { params: Promise<{ id: 
 
   return (
     <ArchiveShell>
+      <ReadingTracker id={ep.id} title={ep.title} href={`/podcasts/${ep.id}`} />
       <article className="read-wrap">
         <div className="read-back">
           <BackButton fallbackHref="/podcasts" fallbackLabel="Podcast Intelligence" />

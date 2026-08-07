@@ -27,7 +27,7 @@ export default function StudioPage() {
     summary: c.summary,
     url: c.url,
   }));
-  const companies = getCompanyDossiers().map((d) => ({ id: d.id, name: d.name, group: d.group }));
+  const companies = getCompanyDossiers().map((d) => ({ id: d.id, name: d.name, category: d.category }));
 
   return (
     <ArchiveShell>

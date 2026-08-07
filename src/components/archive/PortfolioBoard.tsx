@@ -13,7 +13,7 @@ interface CaseOpt {
 interface CoOpt {
   id: string;
   name: string;
-  group: string;
+  category: string;
 }
 
 interface Story {
