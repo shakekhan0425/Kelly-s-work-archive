@@ -78,7 +78,7 @@ export default async function CompanyDetail({ params }: { params: Promise<{ id: 
   );
 }
 
-/** 单字段渲染：有值显示，无值标注「档案未完成」（绝不编造） */
+/** 单字段渲染：有值显示，无值整段隐藏（不再满屏「档案未完成」）。 */
 function CoField({
   k,
   v,
@@ -91,19 +91,17 @@ function CoField({
   tags?: string[];
 }) {
   const hasText = !!v?.trim();
-  const hasList = !!list && list.length > 0;
+  const hasList = !!list && list.length > 0 && list.some((m) => m?.trim?.());
   const hasTags = !!tags && tags.length > 0;
   const empty = !hasText && !hasList && !hasTags;
+  if (empty) return null;
   return (
     <section className="co-section">
-      <h3 className="co-h">
-        {k}
-        {empty ? <span className="stamp stamp-incomplete co-stamp">档案未完成</span> : null}
-      </h3>
+      <h3 className="co-h">{k}</h3>
       {hasText ? <p className="co-p">{v}</p> : null}
       {hasList ? (
         <ul className={k === "面试题库" ? "co-questions" : "co-list"}>
-          {list!.map((m, i) => (
+          {list!.filter((m) => m?.trim?.()).map((m, i) => (
             <li key={i}>{m}</li>
           ))}
         </ul>

@@ -13,6 +13,7 @@ import {
   MessageSquare,
   Settings,
   Eye,
+  Headphones,
   type LucideIcon,
 } from "lucide-react";
 
@@ -36,16 +37,17 @@ export interface NavGroup {
 }
 
 /**
- * 信息架构（v2.5）——
- * ARCHIVE：每日简报 / 市场情报 / 品牌案例库 / 公司研究
- * CREATE：创意工作室 / 视觉素材库
- * CAREER：作品集 / 面试题库 / 商务英语
- * LIBRARY：收藏集 / 来源体系 / 工具箱
+ * 信息架构（v3）——按内容类型 / 工具场景分组，让播客、商务英语、新闻等一目了然。
+ * READ：每日简报 / 新闻情报 / 品牌案例 / 公司研究
+ * LISTEN & LEARN：播客 / 商务英语
+ * CREATE：创意工作室 / 视觉素材库 / 作品集
+ * CAREER：面试题库 / 营销工具箱
+ * LIBRARY：收藏集 / 观察名单 / 来源体系
  */
 export const NAV_GROUPS: NavGroup[] = [
   {
-    title: "档案",
-    en: "ARCHIVE",
+    title: "阅读",
+    en: "READ",
     items: [
       { href: "/desk", label: "每日简报", en: "Daily Brief", icon: LayoutDashboard, badge: 0 },
       { href: "/signals", label: "市场情报", en: "Market Intelligence", icon: Radio },
@@ -54,20 +56,28 @@ export const NAV_GROUPS: NavGroup[] = [
     ],
   },
   {
+    title: "收听与学习",
+    en: "LISTEN & LEARN",
+    items: [
+      { href: "/podcasts", label: "播客", en: "Podcasts", icon: Headphones },
+      { href: "/english", label: "商务英语", en: "Business English", icon: Languages },
+    ],
+  },
+  {
     title: "创作",
     en: "CREATE",
     items: [
       { href: "/studio", label: "创意工作室", en: "Creative Studio", icon: PenLine },
       { href: "/visuals", label: "视觉素材库", en: "Visual Library", icon: Image },
+      { href: "/portfolio", label: "作品集", en: "Portfolio", icon: Briefcase },
     ],
   },
   {
     title: "职业",
     en: "CAREER",
     items: [
-      { href: "/portfolio", label: "作品集", en: "Portfolio", icon: Briefcase },
       { href: "/interview", label: "面试题库", en: "Interview Bank", icon: MessageSquare },
-      { href: "/english", label: "商务英语", en: "Business English", icon: Languages },
+      { href: "/tools", label: "营销工具箱", en: "Marketing Toolkit", icon: Wrench },
     ],
   },
   {
@@ -77,7 +87,6 @@ export const NAV_GROUPS: NavGroup[] = [
       { href: "/collections", label: "收藏集", en: "Collections", icon: Library },
       { href: "/watchlists", label: "观察名单", en: "Watchlists", icon: Eye },
       { href: "/sources", label: "来源体系", en: "Sources", icon: Rss },
-      { href: "/tools", label: "营销工具箱", en: "Marketing Toolkit", icon: Wrench },
     ],
   },
 ];

@@ -292,7 +292,7 @@ export default async function CaseDetail({ params }: { params: Promise<{ id: str
   );
 }
 
-/** §2.6 单字段渲染：有值显示，无值标注「档案未完成」（绝不编造） */
+/** §2.6 单字段渲染：有值显示，无值隐藏。 */
 function CaseField({
   k,
   v,
@@ -309,14 +309,11 @@ function CaseField({
   items?: { id: string; title: string }[];
 }) {
   const empty = !v?.trim() && !href && !(items && items.length > 0);
+  if (empty) return null;
   return (
     <div className="cb-row">
       <span className="cb-k">{k}</span>
-      {empty ? (
-        <span className="cb-v">
-          <span className="stamp stamp-incomplete">档案未完成</span>
-        </span>
-      ) : href ? (
+      {href ? (
         <a className="cb-v cb-link" href={href} target="_blank" rel="noreferrer">
           {hrefLabel || href}
         </a>
