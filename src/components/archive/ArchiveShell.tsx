@@ -2,8 +2,6 @@ import { BinderSidebar } from "./BinderSidebar";
 import { TopUtilityBar } from "./TopUtilityBar";
 import type { AppUser } from "@/lib/auth";
 
-const RING_COUNT = 16;
-
 /**
  * Static demo user. For the public (unauthenticated) deploy every visitor is
  * shown the demo shell — Supabase auth is optional and only engaged when env
@@ -25,13 +23,8 @@ export function ArchiveShell({ children }: { children: React.ReactNode }) {
     <div className="wa-app">
       <BinderSidebar />
       <div className="wa-main">
-        <span className="ring-rail" aria-hidden="true">
-          {Array.from({ length: RING_COUNT }, (_, i) => (
-            <i key={i} style={{ top: `${28 + i * 46}px` }} />
-          ))}
-        </span>
         <TopUtilityBar user={DEMO_USER} />
-        <main className="page-pad">{children}</main>
+        <main className="page-pad wa-page">{children}</main>
       </div>
     </div>
   );

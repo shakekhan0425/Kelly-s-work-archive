@@ -2,6 +2,7 @@ import Link from 'next/link';
 import type { ArchiveItem } from '@/lib/data/types';
 import { formatDate } from '@/lib/format';
 import { isChinese } from './ArticleBody';
+import ImageWithFallback from './ImageWithFallback';
 
 /** 列表行：缩略图 + 标题 + 摘要 + 元信息 */
 export default function ItemRow({
@@ -18,12 +19,16 @@ export default function ItemRow({
   return (
     <article className="list-row">
       <Link href={link} aria-hidden tabIndex={-1} onClick={onClick}>
-        {item.hero ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img className="list-thumb" src={item.hero} alt="" loading="lazy" />
-        ) : (
-          <div className="list-thumb-empty">Aa</div>
-        )}
+        <ImageWithFallback
+          src={item.hero}
+          className="list-thumb"
+          loading="lazy"
+          fallback={{
+            source: item.sourceName,
+            category: item.category,
+            date: item.publishedAt ? item.publishedAt.slice(0, 10).replace(/-/g, ".") : undefined,
+          }}
+        />
       </Link>
       <div style={{ minWidth: 0 }}>
         <div className="meta-line">
@@ -71,14 +76,16 @@ export function ItemCard({ item, href }: { item: ArchiveItem; href?: string }) {
   const cn = isChinese(item.title);
   return (
     <Link href={link} className="editorial-card" style={{ textDecoration: 'none' }}>
-      {item.hero ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img className="card-img" src={item.hero} alt="" loading="lazy" />
-      ) : (
-        <div className="list-thumb-empty" style={{ aspectRatio: '16 / 10' }}>
-          Aa
-        </div>
-      )}
+      <ImageWithFallback
+        src={item.hero}
+        className="card-img"
+        loading="lazy"
+        fallback={{
+          source: item.sourceName,
+          category: item.category,
+          date: item.publishedAt ? item.publishedAt.slice(0, 10).replace(/-/g, ".") : undefined,
+        }}
+      />
       <div className="kicker">{item.sourceName}</div>
       <h3 className={`card-title ${cn ? '' : 'is-en'}`}>{item.title}</h3>
       <div className="meta-line" style={{ marginTop: 'auto' }}>

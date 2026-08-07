@@ -70,6 +70,12 @@ function avatarSeed(str: string) {
   return colors[h];
 }
 
+function formatLikes(n: number) {
+  if (n >= 10000) return (n / 10000).toFixed(1).replace(/\.0$/, "") + "w";
+  if (n >= 1000) return (n / 1000).toFixed(1).replace(/\.0$/, "") + "k";
+  return String(n);
+}
+
 export default function PortfolioBoard({ xhsPosts }: { xhsPosts: CaseStudy[] }) {
   return (
     <div className="pf-wrap">
@@ -77,7 +83,7 @@ export default function PortfolioBoard({ xhsPosts }: { xhsPosts: CaseStudy[] }) 
         <div className="src-kicker">Xiaohongshu Inspiration</div>
         <h1 className="src-title">小红书灵感墙</h1>
         <p className="src-lead">
-          精选品牌案例的种草逻辑，像刷小红书一样浏览真实 campaign 拆解。点卡片进入完整案例。
+          像刷小红书一样浏览真实 campaign 拆解。点卡片进入完整案例。
         </p>
       </header>
 
@@ -90,7 +96,10 @@ export default function PortfolioBoard({ xhsPosts }: { xhsPosts: CaseStudy[] }) 
               post.market,
             ]
               .filter(Boolean)
-              .slice(0, 3);
+              .slice(0, 2);
+            const likesNum =
+              parseFloat(metrics.likes.replace(/[kw]/, "")) *
+              (metrics.likes.includes("w") ? 10000 : metrics.likes.includes("k") ? 1000 : 1);
             return (
               <Link
                 key={post.id}
@@ -105,22 +114,9 @@ export default function PortfolioBoard({ xhsPosts }: { xhsPosts: CaseStudy[] }) 
                     alt={post.campaignName}
                     loading="lazy"
                   />
-                  <span className="pf-xhs-corner">小红书</span>
                 </div>
                 <div className="pf-xhs-body">
-                  <div className="pf-xhs-author">
-                    <span
-                      className="pf-xhs-avatar"
-                      style={{ background: avatarSeed(post.brand) }}
-                    >
-                      {post.brand.trim().charAt(0).toUpperCase()}
-                    </span>
-                    <span className="pf-xhs-author-name">{post.brand}</span>
-                  </div>
                   <h4 className="pf-xhs-title">{post.campaignName}</h4>
-                  <p className="pf-xhs-dek">
-                    {post.bigIdea || post.businessContext}
-                  </p>
                   {tags.length > 0 ? (
                     <div className="pf-xhs-tags">
                       {tags.map((t) => (
@@ -130,10 +126,20 @@ export default function PortfolioBoard({ xhsPosts }: { xhsPosts: CaseStudy[] }) 
                       ))}
                     </div>
                   ) : null}
-                  <div className="pf-xhs-foot">
-                    <span title="喜欢">♡ {metrics.likes}</span>
-                    <span title="收藏">☆ {metrics.saves}</span>
-                    <span title="评论">💬 {metrics.comments}</span>
+                  <div className="pf-xhs-author-row">
+                    <span
+                      className="pf-xhs-avatar"
+                      style={{ background: avatarSeed(post.brand) }}
+                    >
+                      {post.brand.trim().charAt(0).toUpperCase()}
+                    </span>
+                    <span className="pf-xhs-author-name">{post.brand}</span>
+                    <span className="pf-xhs-likes" aria-label={`${metrics.likes} 喜欢`}>
+                      <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor">
+                        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+                      </svg>
+                      {formatLikes(Math.round(likesNum))}
+                    </span>
                   </div>
                 </div>
               </Link>

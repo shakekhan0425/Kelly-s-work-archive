@@ -35,19 +35,29 @@ export default async function DeskPage() {
     day: "numeric",
   }).format(new Date());
 
-  const [archive, ti, recent, dossiers] = await Promise.all([
+  const [archive, tiRaw, recent, dossiers] = await Promise.all([
     getArchiveLive(),
     getTodayIntelligence(await getArchiveLive()),
-    getSignalsLive({ limit: 8 }),
+    getSignalsLive({ limit: 12 }),
     getCompanyDossiersLive(),
   ]);
+
+  // Desk 只展示已发布条目：摘要/正文缺失的 thin 项不进入今日情报列表与右栏精选
+  const ti = {
+    ...tiRaw,
+    changes: tiRaw.changes.filter((s) => !s.thin && s.title && s.publishedAt),
+  };
 
   const stats = archive.stats;
   const src = liveSource();
 
-  // Right rail picks
-  const casePick = ti.caseItem ? getCaseStudyLive(ti.caseItem.id) ?? ti.caseItem : null;
-  const companyPick = ti.company ?? dossiers[0];
+  // Right rail picks：只从已发布条目中选
+  const publishedCases = archive.cases.filter((c) => !c.thin);
+  const publishedSignals = archive.signals.filter((s) => !s.thin);
+  const casePick = ti.caseItem && !ti.caseItem.thin
+    ? getCaseStudyLive(ti.caseItem.id) ?? ti.caseItem
+    : publishedCases[0] ?? null;
+  const companyPick = ti.company ?? dossiers.find((d) => d.tier === "A") ?? dossiers[0];
   const podcastPick = ti.podcast ?? archive.podcasts[0];
 
   return (

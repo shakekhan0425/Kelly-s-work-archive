@@ -7,6 +7,7 @@ import NotesPanel from "@/components/archive/NotesPanel";
 import FavoriteButton from "@/components/archive/FavoriteButton";
 import { ReadingTracker } from "@/components/archive/ReadingTracker";
 import { BackButton } from "@/components/archive/BackButton";
+import ImageWithFallback from "@/components/archive/ImageWithFallback";
 import {
   getItemByIdLive,
   getRelated,
@@ -80,15 +81,23 @@ export default async function SignalDetail({ params }: { params: Promise<{ id: s
             {item.lang === "en" ? <span className="stamp stamp-lav">EN</span> : null}
           </div>
           {item.hero ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img className="read-hero" src={item.hero} alt="" />
+            <ImageWithFallback
+              src={item.hero}
+              className="read-hero"
+              loading="eager"
+              fallback={{
+                source: item.sourceName,
+                category: item.category,
+                date: item.publishedAt ? item.publishedAt.slice(0, 10).replace(/-/g, ".") : undefined,
+              }}
+            />
           ) : null}
         </header>
 
         {item.thin ? (
           <div className="incomplete-banner">
-            <span className="stamp stamp-incomplete">正文待补</span>
-            <span>本条暂缺正文，点击右侧「阅读原文」可前往来源站点查看。</span>
+            <span className="stamp stamp-incomplete">档案整理中</span>
+            <span>本篇暂以摘要模式呈现，完整解析待补充。可点击右侧「阅读原文」查看来源。</span>
           </div>
         ) : null}
 
