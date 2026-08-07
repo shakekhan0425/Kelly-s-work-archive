@@ -2,19 +2,20 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Radio, BookOpen, Building2, Bookmark } from "lucide-react";
+import { LayoutDashboard, Radio, Headphones, Library, User } from "lucide-react";
 
 /**
  * 手机端底部标签栏（≤880px 显示）。
- * 只放 5 个高频入口；其余栏目仍可从顶部菜单进入。
+ * 按新规范分组：Desk / Intelligence / Learn / Library / Me。
+ * Learn 聚合「新闻 / 播客 / 商务英语」三类学习内容，单集入口从 /podcasts 进入。
  * 通过 env(safe-area-inset-bottom) 避开 iPhone 的 Home Indicator。
  */
 const TABS = [
   { href: "/desk", label: "简报", icon: LayoutDashboard },
   { href: "/signals", label: "情报", icon: Radio },
-  { href: "/cases", label: "案例", icon: BookOpen },
-  { href: "/companies", label: "公司", icon: Building2 },
-  { href: "/favorites", label: "收藏", icon: Bookmark },
+  { href: "/podcasts", label: "学习", icon: Headphones },
+  { href: "/sources", label: "资料", icon: Library },
+  { href: "/profile", label: "我的", icon: User },
 ];
 
 export function MobileTabBar() {

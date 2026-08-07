@@ -366,48 +366,9 @@ h3 {
   .utility-bar {
     padding-left: 18px;
   }
-  /* 移动端：侧栏从纵向全量导航收成顶部横向滚动条，
-     主导航交给底部标签栏，避免竖向长列表占用首屏。 */
+  /* 移动端：按新规范隐藏桌面侧栏（避免红色横条挤压卡片），
+     主导航完全交给底部标签栏。 */
   .binder {
-    flex-direction: row;
-    align-items: center;
-    min-height: 0;
-    padding: 0;
-    overflow-x: auto;
-    overflow-y: hidden;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-    position: static;
-    border-right: none;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.25);
-  }
-  .binder::-webkit-scrollbar {
-    display: none;
-  }
-  .binder-brand,
-  .binder-foot,
-  .binder-group-title {
-    display: none;
-  }
-  .binder-nav {
-    flex-direction: row;
-    align-items: center;
-    gap: 2px;
-    margin: 0;
-    padding: 0 10px;
-    flex: 1;
-  }
-  .binder-group {
-    display: flex;
-    align-items: center;
-    margin: 0;
-  }
-  .binder-link {
-    white-space: nowrap;
-    padding: 11px 12px;
-    font-size: 13px;
-  }
-  .binder-link .nav-en {
     display: none;
   }
 }
@@ -455,6 +416,62 @@ h3 {
   .page-pad {
     padding-bottom: calc(74px + env(safe-area-inset-bottom));
   }
+}
+
+/* ── 我的（Me）页 ── */
+.profile-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+}
+.profile-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 16px;
+  border: 1px solid var(--color-line);
+  border-radius: 10px;
+  background: var(--color-paper-light);
+  text-decoration: none;
+  color: var(--color-ink);
+  transition: transform 0.14s ease, border-color 0.15s ease;
+}
+.profile-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--color-archive-red);
+}
+.profile-card-t {
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 600;
+}
+.profile-card-d {
+  font-size: 12.5px;
+  color: var(--color-ink-muted);
+  line-height: 1.5;
+}
+.profile-resume {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 18px;
+  border-left: 3px solid var(--color-archive-red);
+}
+.profile-resume-t {
+  font-family: var(--font-condensed);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 11px;
+  color: var(--color-ink-muted);
+}
+.profile-resume-h {
+  font-family: var(--font-display);
+  font-size: 18px;
+}
+.profile-resume-p {
+  font-size: 12px;
+  color: var(--color-ink-muted);
 }
 
 /* ── 顶部阅读进度条 ── */
