@@ -2722,3 +2722,246 @@ a:active, button:active, .btn:active, .chip:active, .icon-btn:active, .fav-btn:a
     gap: 10px;
   }
 }
+
+/* ─────────── 播客频道封面（永不挂的字母渐变） ─────────── */
+.podch-cover-gen {
+  width: 64px;
+  height: 64px;
+  border-radius: 6px;
+  border: 1px solid var(--color-line);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.podch-cover-gen span {
+  font-family: var(--font-display);
+  font-size: 30px;
+  color: rgba(255, 255, 255, 0.92);
+  font-weight: 700;
+}
+.podch-head:hover .podch-cover-gen {
+  transform: scale(1.04);
+  transition: transform 0.16s ease;
+}
+.podch-head {
+  text-decoration: none;
+  cursor: pointer;
+}
+
+/* ─────────── 播客频道详情页 ─────────── */
+.ch-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 18px;
+  margin-bottom: 16px;
+}
+.ch-head .podch-cover-gen {
+  width: 104px;
+  height: 104px;
+  border-radius: 8px;
+}
+.ch-head .podch-cover-gen span {
+  font-size: 48px;
+}
+.ch-head-info { flex: 1; min-width: 0; }
+.ch-desc {
+  font-family: var(--font-serif-cn);
+  font-size: 15px;
+  line-height: 1.75;
+  color: var(--color-ink-soft);
+  margin: 0 0 16px;
+  max-width: 70ch;
+}
+.ch-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-bottom: 26px;
+  padding-bottom: 22px;
+  border-bottom: 1px solid var(--color-line);
+}
+.ch-ep-list {
+  border-top: none;
+  padding-top: 4px;
+}
+.ch-pending {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  color: var(--color-ink-faint);
+  font-style: italic;
+  margin: 0;
+}
+
+/* ─────────── 商务英语封面块 ─────────── */
+.en-sub-note {
+  font-family: var(--font-sans);
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--color-ink-muted);
+  margin: -4px 0 0;
+  max-width: 72ch;
+}
+.en-cover {
+  height: 96px;
+  border-radius: 3px 3px 0 0;
+  margin: -14px -16px 12px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.en-cover-initial {
+  font-family: var(--font-display);
+  font-size: 42px;
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 700;
+}
+.en-cover-tag {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  font-family: var(--font-condensed);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 10px;
+  color: #fff;
+  background: rgba(25, 24, 23, 0.42);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 999px;
+  padding: 1px 8px;
+}
+.en-read-src {
+  display: inline-block;
+  margin-top: 10px;
+  font-family: var(--font-sans);
+  font-size: 12.5px;
+  color: var(--color-archive-red);
+  text-decoration: none;
+}
+.en-read-src:hover { text-decoration: underline; }
+.en-brief-cover {
+  height: 54px;
+  border-radius: 3px;
+  margin-bottom: 12px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.en-brief-cover span {
+  font-family: var(--font-display);
+  font-size: 26px;
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 700;
+}
+.en-brief-cover-tag {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  font-family: var(--font-condensed);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-size: 9.5px;
+  color: #fff;
+  background: rgba(25, 24, 23, 0.42);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 999px;
+  padding: 1px 7px;
+}
+
+/* ─────────── 作品集：案例库展示 ─────────── */
+.pf-library {
+  margin: 8px 0 30px;
+  padding-top: 22px;
+  border-top: 1px solid var(--color-line);
+}
+.pf-lib-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.pf-lib-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 14px;
+}
+.pf-lib-card {
+  border: 1px solid var(--color-line);
+  border-radius: 6px;
+  background: var(--color-paper-light);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.12s ease, box-shadow 0.14s ease, border-color 0.14s ease;
+}
+.pf-lib-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 24px rgba(25, 24, 23, 0.08);
+  border-color: var(--color-line-strong);
+}
+.pf-lib-cover {
+  height: 96px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.pf-lib-cover span {
+  font-family: var(--font-display);
+  font-size: 40px;
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 700;
+}
+.pf-lib-body {
+  padding: 12px 14px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+}
+.pf-lib-brands {
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+.pf-lib-title {
+  font-family: var(--font-serif-cn);
+  font-size: 14.5px;
+  font-weight: 700;
+  line-height: 1.45;
+  margin: 0;
+}
+.pf-lib-title a {
+  color: var(--color-ink);
+  text-decoration: none;
+}
+.pf-lib-title a:hover { color: var(--color-archive-red); }
+.pf-lib-foot {
+  margin-top: auto;
+}
+.pf-lib-pick {
+  font-family: var(--font-sans);
+  font-size: 12.5px;
+  color: var(--color-archive-red);
+  background: none;
+  border: 1px solid var(--color-archive-red);
+  border-radius: 5px;
+  padding: 4px 12px;
+  cursor: pointer;
+}
+.pf-lib-pick:hover { background: var(--color-archive-red); color: #fff; }
+.btn-ghost {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  color: var(--color-ink-muted);
+  background: var(--color-paper);
+  border: 1px solid var(--color-line-strong);
+  border-radius: 5px;
+  padding: 7px 12px;
+  cursor: pointer;
+}
+.btn-ghost:hover { color: var(--color-ink); border-color: var(--color-ink-faint); }

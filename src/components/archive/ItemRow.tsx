@@ -41,7 +41,6 @@ export default function ItemRow({
             </>
           ) : null}
           {item.lang === 'en' ? <span className="stamp stamp-lav">EN</span> : null}
-          {item.thin ? <span className="stamp stamp-incomplete">正文待补</span> : null}
         </div>
         <h3 className={`list-title ${cn ? '' : 'is-en'}`}>
           <Link href={link} onClick={onClick}>{item.title}</Link>

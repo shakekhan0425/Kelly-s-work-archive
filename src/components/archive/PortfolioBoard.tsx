@@ -75,14 +75,64 @@ export default function PortfolioBoard({ cases, companies }: { cases: CaseOpt[];
             </option>
           ))}
         </select>
+        <button className="btn-ghost" onClick={() => setEditing({
+          id: `ps_${Date.now().toString(36)}`,
+          title: "空白 STAR 故事",
+          situation: "", task: "", action: "", result: "", lessons: "", refs: [], updatedAt: new Date().toISOString(),
+        })}>
+          新建空白故事
+        </button>
       </div>
+
+      {/* 案例库：真实案例 + 小红书富化案例展示（无需填写即看得见） */}
+      <section className="pf-library">
+        <div className="pf-lib-head">
+          <div>
+            <div className="kicker" style={{ color: "var(--color-archive-red)" }}>CASE LIBRARY</div>
+            <h2 style={{ fontFamily: "var(--font-serif-cn)", fontSize: 22, margin: "4px 0 0" }}>案例库</h2>
+          </div>
+          <span className="stamp">{cases.length} 个真实案例</span>
+        </div>
+        <div className="pf-lib-grid">
+          {cases.map((c) => {
+            let h = 0;
+            for (const char of c.title) h = (h * 31 + char.charCodeAt(0)) % 360;
+            const bg = `linear-gradient(135deg, hsl(${h} 36% 44%), hsl(${(h + 30) % 360} 38% 30%))`;
+            const initial = (c.brands[0] || c.title).trim().charAt(0).toUpperCase();
+            return (
+              <article key={c.id} className="pf-lib-card">
+                <div className="pf-lib-cover" style={{ background: bg }} aria-hidden="true">
+                  <span>{initial}</span>
+                </div>
+                <div className="pf-lib-body">
+                  <div className="pf-lib-brands">
+                    {c.brands.slice(0, 3).map((b) => (
+                      <span key={b} className="stamp stamp-coral">{b}</span>
+                    ))}
+                  </div>
+                  <h4 className="pf-lib-title">
+                    {c.url ? (
+                      <a href={c.url} target="_blank" rel="noreferrer">{c.title}</a>
+                    ) : (
+                      c.title
+                    )}
+                  </h4>
+                  <div className="pf-lib-foot">
+                    <button className="pf-lib-pick" onClick={() => newFromCase(c.id)}>生成 STAR →</button>
+                  </div>
+                </div>
+              </article>
+            );
+          })}
+        </div>
+      </section>
 
       {editing ? (
         <StarEditor key={editing.id} initial={editing} companies={companies} onSave={save} onCancel={() => setEditing(null)} />
       ) : null}
 
       {stories.length === 0 && !editing ? (
-        <div className="empty-note">还没有故事。从上方真实案例快速生成，或点「新建空白故事」。</div>
+        <div className="empty-note">还没有我的故事。从上方真实案例快速生成，或点「新建空白故事」。</div>
       ) : null}
 
       <div className="pf-list">

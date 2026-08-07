@@ -39,70 +39,88 @@ export default async function EnglishPage() {
       </section>
 
       <SectionHeader eyebrow="Live Corpus" title="实时语料" />
+      <p className="en-sub-note">从真实行业文章原句抽取的商业 / 营销术语句型。点卡片右上角「读原文」可跳转来源。</p>
       <div className="en-grid" style={{ marginTop: 12 }}>
         {cards.length > 0 ? (
-          cards.map((e) => (
-            <a
-              id={e.id}
-              key={e.id}
-              className="en-card"
-              href={e.url}
-              target="_blank"
-              rel="noreferrer"
-            >
-              <div className="en-sentence">“{e.sentence}”</div>
-              <div className="en-terms">
-                {e.terms.slice(0, 4).map((t) => (
-                  <span key={t} className="en-term">
-                    {t}
-                  </span>
-                ))}
-              </div>
-              <div className="meta-line" style={{ marginTop: 10 }}>
-                <span>{e.sourceName}</span>
-                {e.publishedAt ? (
-                  <>
-                    <span className="sep">/</span>
-                    <span>{e.publishedAt.slice(0, 10)}</span>
-                  </>
-                ) : null}
-              </div>
-            </a>
-          ))
+          cards.map((e) => {
+            // 由来源名派生稳定色相，生成杂志风封面
+            let h = 0;
+            for (const c of e.sourceName) h = (h * 31 + c.charCodeAt(0)) % 360;
+            const initial = e.sourceName.trim().charAt(0).toUpperCase();
+            const bg = `linear-gradient(135deg, hsl(${h} 42% 46%), hsl(${(h + 34) % 360} 40% 32%))`;
+            return (
+              <article id={e.id} key={e.id} className="en-card">
+                <div className="en-cover" style={{ background: bg }} aria-hidden="true">
+                  <span className="en-cover-initial">{initial}</span>
+                  <span className="en-cover-tag">实时语料</span>
+                </div>
+                <div className="en-terms">
+                  {e.terms.slice(0, 4).map((t) => (
+                    <span key={t} className="en-term">
+                      {t}
+                    </span>
+                  ))}
+                </div>
+                <div className="en-sentence">"{e.sentence}"</div>
+                <div className="meta-line" style={{ marginTop: 10 }}>
+                  <span>{e.sourceName}</span>
+                  {e.publishedAt ? (
+                    <>
+                      <span className="sep">/</span>
+                      <span>{e.publishedAt.slice(0, 10)}</span>
+                    </>
+                  ) : null}
+                </div>
+                <a className="en-read-src" href={e.url} target="_blank" rel="noreferrer">
+                  读原文 ↗
+                </a>
+              </article>
+            );
+          })
         ) : (
           <p className="list-dek">暂无英语条目。</p>
         )}
       </div>
 
       <SectionHeader eyebrow="Curated Vocabulary" title="系统化商务词卡" />
+      <p className="en-sub-note">通用商务英语整理，含句型 / 范例 / 面试应用。例句为教学示范，非引用特定文章。</p>
       <div className="en-brief-grid" style={{ marginTop: 12 }}>
-        {ENGLISH_BRIEFS.map((b) => (
-          <article id={b.id} key={b.id} className="en-brief-card">
-            <div className="en-brief-head">
-              <span className="en-term">{b.term}</span>
-              <span className="en-brief-zh">{b.zh}</span>
-            </div>
-            <p className="en-brief-def">{b.definition}</p>
+        {ENGLISH_BRIEFS.map((b) => {
+          let h = 0;
+          for (const c of b.term) h = (h * 31 + c.charCodeAt(0)) % 360;
+          const bg = `linear-gradient(135deg, hsl(${h} 30% 50%), hsl(${(h + 28) % 360} 32% 36%))`;
+          return (
+            <article id={b.id} key={b.id} className="en-brief-card">
+              <div className="en-brief-cover" style={{ background: bg }} aria-hidden="true">
+                <span>{b.term.trim().charAt(0).toUpperCase()}</span>
+                <span className="en-brief-cover-tag">系统化词卡</span>
+              </div>
+              <div className="en-brief-head">
+                <span className="en-term">{b.term}</span>
+                <span className="en-brief-zh">{b.zh}</span>
+              </div>
+              <p className="en-brief-def">{b.definition}</p>
 
-            <div className="en-brief-row">
-              <span className="en-brief-k">句型</span>
-              <p className="en-brief-v">{b.pattern}</p>
-            </div>
-            <div className="en-brief-row">
-              <span className="en-brief-k">范例</span>
-              <p className="en-brief-sample">“{b.sample}”</p>
-            </div>
-            <div className="en-brief-row">
-              <span className="en-brief-k">地道表达</span>
-              <p className="en-brief-v">{b.corporateLanguage}</p>
-            </div>
-            <div className="en-brief-row">
-              <span className="en-brief-k">面试应用</span>
-              <p className="en-brief-v">{b.interviewPitch}</p>
-            </div>
-            <div className="en-brief-src">来源类别：{b.source}</div>
-          </article>
-        ))}
+              <div className="en-brief-row">
+                <span className="en-brief-k">句型</span>
+                <p className="en-brief-v">{b.pattern}</p>
+              </div>
+              <div className="en-brief-row">
+                <span className="en-brief-k">范例</span>
+                <p className="en-brief-sample">"{b.sample}"</p>
+              </div>
+              <div className="en-brief-row">
+                <span className="en-brief-k">地道表达</span>
+                <p className="en-brief-v">{b.corporateLanguage}</p>
+              </div>
+              <div className="en-brief-row">
+                <span className="en-brief-k">面试应用</span>
+                <p className="en-brief-v">{b.interviewPitch}</p>
+              </div>
+              <div className="en-brief-src">来源类别：{b.source}</div>
+            </article>
+          );
+        })}
       </div>
     </ArchiveShell>
   );

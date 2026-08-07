@@ -6,17 +6,25 @@ import type { PodcastChannelWithHealth } from "@/lib/data/types";
 
 export const metadata = { title: "Podcast Intelligence · WORK / Archive" };
 
+/** 频道首字母封面（不依赖外部图片，永不挂） */
+function ChannelCover({ name, id }: { name: string; id: string }) {
+  const ch = name.trim().charAt(0).toUpperCase() || "♪";
+  let h = 0;
+  for (const c of id) h = (h * 31 + c.charCodeAt(0)) % 360;
+  const bg = `linear-gradient(135deg, hsl(${h} 38% 42%), hsl(${(h + 38) % 360} 42% 30%))`;
+  return (
+    <div className="podch-cover podch-cover-gen" style={{ background: bg }} aria-hidden="true">
+      <span>{ch}</span>
+    </div>
+  );
+}
+
 async function ChannelCard({ ch }: { ch: PodcastChannelWithHealth }) {
   const eps = (await getPodcastEpisodesLive(ch.id)).slice(0, 3);
   return (
     <article className="podch-card">
-      <div className="podch-head">
-        {ch.image ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img className="podch-cover" src={ch.image} alt="" loading="lazy" />
-        ) : (
-          <div className="podch-cover-empty">♪</div>
-        )}
+      <Link href={`/podcasts/channel/${ch.id}`} className="podch-head" style={{ textDecoration: "none", color: "inherit" }}>
+        <ChannelCover name={ch.name} id={ch.id} />
         <div className="podch-id">
           <div className="podch-name">{ch.name}</div>
           <div className="podch-cat">{ch.category}</div>
@@ -27,7 +35,7 @@ async function ChannelCard({ ch }: { ch: PodcastChannelWithHealth }) {
         <span className={`src-status ${ch.health.ok ? "live" : "pending"}`}>
           {ch.health.ok ? `● ${ch.health.count} 单集` : "○ 接入中"}
         </span>
-      </div>
+      </Link>
       <p className="podch-desc">{ch.desc}</p>
       {eps.length > 0 ? (
         <ul className="podch-eps">
