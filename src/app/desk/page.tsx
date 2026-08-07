@@ -45,26 +45,21 @@ export default async function DeskPage() {
 
   return (
     <ArchiveShell>
-      {/* A. Cover Header */}
-      <section className="paper-panel torn" style={{ padding: 22, marginBottom: 22 }}>
+      {/* A. Cover Header — Film Travel Hero */}
+      <section className="paper-panel torn desk-hero" style={{ padding: 0, marginBottom: 22, overflow: "hidden" }}>
         <span className="tape" aria-hidden="true">
           Daily Desk
         </span>
-        <div
-          style={{
-            display: "flex",
-            flexWrap: "wrap",
-            gap: 16,
-            alignItems: "flex-end",
-            justifyContent: "space-between",
-          }}
-        >
-          <div>
-            <div className="eyebrow" style={{ marginBottom: 6 }}>
+        <div className="desk-hero-grid">
+          <div className="desk-hero-text">
+            <div className="eyebrow" style={{ marginBottom: 8 }}>
               Today’s Issue · {today}
             </div>
-            <h1 style={{ fontSize: 34, lineHeight: 1.05 }}>今日工作档案馆</h1>
-            <div style={{ marginTop: 10, display: "flex", gap: 8, flexWrap: "wrap" }}>
+            <h1 className="desk-hero-title">今日工作档案馆</h1>
+            <p className="desk-hero-lead">
+              每天从真实来源中整理市场情报、品牌案例与公司研究，为你的营销判断提供事实基础。
+            </p>
+            <div className="desk-hero-tags">
               <span className="issue-no">No. 001</span>
               <span className="stamp">实时抓取</span>
               <span className="stamp">情报 {stats.signals}</span>
@@ -72,25 +67,31 @@ export default async function DeskPage() {
               <span className="stamp">播客 {stats.podcasts}</span>
             </div>
             {src === "supabase" ? (
-              <span className="live-badge" style={{ marginLeft: 8 }} title="数据来自 Supabase，实时更新">● 实时</span>
+              <span className="live-badge" title="数据来自 Supabase，实时更新">● 实时</span>
             ) : src === "json" ? (
               <span
                 className="live-badge"
-                style={{ marginLeft: 8, background: "#eef0f3", color: "#6b7280", borderColor: "#e2e5ea" }}
+                style={{ background: "#eef0f3", color: "#6b7280", borderColor: "#e2e5ea" }}
                 title="未连接 Supabase，使用本地归档数据"
               >
                 ● 本地档案
               </span>
             ) : null}
+            <div className="desk-hero-cta">
+              <Link href="/signals" className="btn btn-primary">
+                浏览最新情报 →
+              </Link>
+              <Link href="/sources" className="btn btn-ghost">
+                来源体系
+              </Link>
+            </div>
           </div>
-          <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-            <Link href="/signals" className="btn btn-primary">
-              浏览最新情报 →
-            </Link>
-            <Link href="/sources" className="btn btn-ghost">
-              来源体系
-            </Link>
-          </div>
+          {recent[0]?.hero ? (
+            <div className="hero-film desk-hero-img">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={recent[0].hero} alt="" loading="eager" />
+            </div>
+          ) : null}
         </div>
       </section>
 

@@ -84,8 +84,8 @@ export function SignalsExplorer({
         ))}
       </div>
 
-      <div className="filter-bar" style={{ marginTop: 8 }}>
-        <span className="filter-label">市场分类</span>
+      <div className="filter-bar compact" style={{ marginTop: 8 }}>
+        <span className="filter-label">市场</span>
         {catCounts.map((c) => (
           <Link
             key={c.id}
@@ -95,10 +95,8 @@ export function SignalsExplorer({
             {c.zh} <span className="fc-n">{c.count}</span>
           </Link>
         ))}
-      </div>
-
-      <div className="filter-bar" style={{ marginTop: 8 }}>
-        <span className="filter-label">内容领域</span>
+        <span className="filter-divider" aria-hidden="true" />
+        <span className="filter-label">领域</span>
         {scopeCounts.map((d) => (
           <Link
             key={d.id}
@@ -111,17 +109,20 @@ export function SignalsExplorer({
         ))}
       </div>
 
-      {!vertical && (
-        <div className="filter-bar" style={{ marginTop: 8 }}>
-          {topics.map((t) => (
-            <Link
-              key={t.name}
-              href={`/signals?t=${encodeURIComponent(t.name)}`}
-              className={`filter-chip sub ${topic === t.name ? "is-on" : ""}`}
-            >
-              {t.name} <span className="fc-n">{t.count}</span>
-            </Link>
-          ))}
+      {!vertical && topics.length > 0 && (
+        <div className="filter-bar topic-scroll" style={{ marginTop: 8 }}>
+          <span className="filter-label">话题</span>
+          <div className="topic-pills">
+            {topics.map((t) => (
+              <Link
+                key={t.name}
+                href={`/signals?t=${encodeURIComponent(t.name)}`}
+                className={`filter-chip sub ${topic === t.name ? "is-on" : ""}`}
+              >
+                {t.name} <span className="fc-n">{t.count}</span>
+              </Link>
+            ))}
+          </div>
         </div>
       )}
 
