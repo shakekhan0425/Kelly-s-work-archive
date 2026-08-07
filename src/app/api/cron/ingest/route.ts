@@ -7,10 +7,9 @@ import { runMarkLive } from "@pipeline/mark-live";
 // 采集是重 CPU / 网络任务，必须 Node runtime；且每次请求实时抓取，禁用静态。
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-// Vercel 函数超时：Hobby 上限 60s、Pro 上限 300s。超过套餐上限会直接导致 BUILD 失败、
-// 站点停在旧部署不更新。因此这里取保守的 60s（Hobby/Pro 都安全）；若在 Pro 上想跑满，
-// 可改回 300，并用 CRON_BUDGET_MS 控制单次预算。
-export const maxDuration = 60;
+// Vercel 函数超时：Hobby 上限 60s、Pro 上限 300s。本站部署在 Pro，取 300s 跑满单次采集；
+// 单次预算由 DEFAULT_BUDGET_MS / CRON_BUDGET_MS 与下方按 maxDuration 收敛的逻辑控制。
+export const maxDuration = 300;
 
 /** 留给响应序列化和收尾的安全余量。 */
 const SAFETY_MS = 20_000;
