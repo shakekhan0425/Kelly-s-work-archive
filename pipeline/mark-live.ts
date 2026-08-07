@@ -6,15 +6,13 @@
  * 运行：tsx pipeline/mark-live.ts
  */
 import "./lib/env";
-import { createClient } from "@supabase/supabase-js";
+import { getSupabaseAdmin } from "./lib/supabase";
 import { isCli } from "./lib/ingest-shared";
-
-const sb = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, { auth: { persistSession: false } });
 
 export async function runMarkLive(log: (s: string) => void = console.log): Promise<{ withContent: number; marked: number }> {
   const [{ data: sig }, { data: cas }] = await Promise.all([
-    sb.from("signals").select("data"),
-    sb.from("cases").select("data"),
+    getSupabaseAdmin().from("signals").select("data"),
+    getSupabaseAdmin().from("cases").select("data"),
   ]);
   const ids = new Set<string>();
   for (const r of sig || []) if (r.data?.sourceId) ids.add(r.data.sourceId);
@@ -22,11 +20,11 @@ export async function runMarkLive(log: (s: string) => void = console.log): Promi
   log(`有内容的来源数：${ids.size}`);
   let n = 0;
   for (const id of ids) {
-    const { data: row } = await sb.from("sources").select("data").eq("id", id).maybeSingle();
+    const { data: row } = await getSupabaseAdmin().from("sources").select("data").eq("id", id).maybeSingle();
     if (!row || !row.data) continue;
     if (row.data.live === true) { n++; continue; }
     const updated = { ...row.data, live: true };
-    const { error } = await sb.from("sources").update({ data: updated }).eq("id", id);
+    const { error } = await getSupabaseAdmin().from("sources").update({ data: updated }).eq("id", id);
     if (!error) n++;
   }
   log(`✅ 已标记 live:true 的来源：${n} 个`);

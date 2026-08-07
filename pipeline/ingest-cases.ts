@@ -7,12 +7,11 @@
  */
 import "./lib/env";
 import { createHash } from "node:crypto";
-import { createClient } from "@supabase/supabase-js";
+import { getSupabaseAdmin } from "./lib/supabase";
 import { SOURCE_REGISTRY } from "../src/lib/data/sources.registry";
 import type { ArchiveItem, SourceIntel } from "../src/lib/data/types";
 import { slice, isCli, type RunOpts, type RunReport } from "./lib/ingest-shared";
 
-const sb = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!, { auth: { persistSession: false } });
 const FETCH_TIMEOUT = 18_000;
 const MAX_PER_SITE = 12;
 
@@ -77,7 +76,7 @@ async function scrapeSite(cfg: SiteCfg): Promise<{ n: number; skip: number }> {
       const wc = wordCount(text);
       const brands = [...new Set(BRAND_KW.filter((b) => (title + body).includes(b)))];
       const id = "case_" + createHash("sha256").update(url).digest("hex").slice(0, 20);
-      const { data: ex } = await sb.from("cases").select("id").eq("id", id).maybeSingle();
+      const { data: ex } = await getSupabaseAdmin().from("cases").select("id").eq("id", id).maybeSingle();
       if (ex) { skip++; continue; }
       const item: ArchiveItem = {
         id, slug: slugify(title), title, url, summary: (meta(h, "og:description") || text.slice(0, 140)).slice(0, 280),
@@ -87,13 +86,13 @@ async function scrapeSite(cfg: SiteCfg): Promise<{ n: number; skip: number }> {
         wordCount: wc, readMinutes: Math.max(1, Math.round(wc / 300)), thin: wc < 800,
         knowledge: { aiStatus: "draft" } as ArchiveItem["knowledge"],
       };
-      const { error } = await sb.from("cases").upsert({ id, data: item }, { onConflict: "id" });
+      const { error } = await getSupabaseAdmin().from("cases").upsert({ id, data: item }, { onConflict: "id" });
       if (error) { console.log(`  ✗ ${cfg.id} 写库失败: ${error.message}`); skip++; }
       else n++;
     } catch (e) { skip++; }
   }
   if (n > 0) {
-    try { await sb.from("sources").update({ is_active: true }).eq("id", cfg.id); } catch { /* ignore */ }
+    try { await getSupabaseAdmin().from("sources").update({ is_active: true }).eq("id", cfg.id); } catch { /* ignore */ }
   }
   return { n, skip };
 }
