@@ -7,7 +7,6 @@
  */
 import "./lib/env";
 import { createHash } from "node:crypto";
-import Parser from "rss-parser";
 import { extract } from "@extractus/article-extractor";
 import { SOURCE_REGISTRY } from "../src/lib/data/sources.registry";
 import type { ArchiveItem, SourceIntel } from "../src/lib/data/types";
@@ -17,8 +16,65 @@ import {
   type RunOpts, type RunReport,
 } from "./lib/ingest-shared";
 
-const parser = new Parser();
 const MAX_PER_FEED = 14;
+
+/* 原生 RSS/Atom 解析，替代 rss-parser。
+ * 原因：rss-parser 是 CJS 重依赖，静态打进路由包会让 Vercel 的 webpack 构建失败
+ * （本地 Turbopack 不报错）。这里只抽取抓取所需字段，足够稳健且零额外依赖。 */
+function cdata(s: string): string {
+  return s.replace(/^\s*<!\[CDATA\[([\s\S]*?)\]\]>\s*$/, "$1").trim();
+}
+function tagText(block: string, name: string): string | undefined {
+  const m = block.match(new RegExp(`<${name}(?:\\s[^>]*)?>([\\s\\S]*?)</${name}>`, "i"));
+  return m ? cdata(m[1]) : undefined;
+}
+function attr(block: string, tagName: string, attrName: string): string | undefined {
+  const m = block.match(new RegExp(`<${tagName}\\b[^>]*\\b${attrName}="([^"]*)"`, "i"));
+  return m ? m[1] : undefined;
+}
+interface RawItem {
+  title?: string;
+  link?: string;
+  guid?: string;
+  enclosure?: { url?: string };
+  "content:encoded"?: string;
+  content?: string;
+  summary?: string;
+  creator?: string;
+  isoDate?: string;
+  pubDate?: string;
+}
+function parseFeed(xml: string): { items: RawItem[] } {
+  const items: RawItem[] = [];
+  const pushBlock = (b: string, atom: boolean) => {
+    const link = atom ? attr(b, "link", "href") || tagText(b, "link") : tagText(b, "link");
+    const encUrl = atom
+      ? attr(b, "link", "href") && /rel=["']enclosure["']/i.test(b)
+        ? attr(b, "link", "href")
+        : undefined
+      : attr(b, "enclosure", "url");
+    items.push({
+      title: tagText(b, "title"),
+      link,
+      guid: atom ? tagText(b, "id") : tagText(b, "guid"),
+      enclosure: encUrl ? { url: encUrl } : undefined,
+      "content:encoded": atom ? undefined : tagText(b, "content:encoded"),
+      content: tagText(b, "content"),
+      summary: tagText(b, "summary") || tagText(b, "description"),
+      creator: atom
+        ? tagText(b, "name") || tagText(b, "author")
+        : tagText(b, "dc:creator") || tagText(b, "creator"),
+      isoDate: atom ? tagText(b, "updated") || tagText(b, "published") : tagText(b, "pubDate"),
+      pubDate: atom ? tagText(b, "published") || tagText(b, "updated") : tagText(b, "pubDate"),
+    });
+  };
+  let m: RegExpExecArray | null;
+  const itemRe = /<item\b[\s\S]*?<\/item>/gi;
+  while ((m = itemRe.exec(xml))) pushBlock(m[0], false);
+  const entryRe = /<entry\b[\s\S]*?<\/entry>/gi;
+  while ((m = entryRe.exec(xml))) pushBlock(m[0], true);
+  return { items };
+}
 
 async function ingestRss(reg: SourceIntel): Promise<{ n: number; skip: number; err?: string; via?: string }> {
   if (!reg.rss) return { n: 0, skip: 0 };
@@ -32,7 +88,7 @@ async function ingestRss(reg: SourceIntel): Promise<{ n: number; skip: number; e
   if (!xml) return { n: 0, skip: 0, err: "feed 不可达或非 RSS/Atom" };
   let feed;
   try {
-    feed = await parser.parseString(xml);
+    feed = parseFeed(xml);
   } catch (e) {
     return { n: 0, skip: 0, err: "解析失败 " + (e as Error).message };
   }
