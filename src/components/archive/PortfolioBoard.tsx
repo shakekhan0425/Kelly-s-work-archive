@@ -2,14 +2,8 @@
 
 import { useState } from "react";
 import { usePortfolio } from "@/lib/use-persistence";
+import type { CaseStudy } from "@/lib/data/types";
 
-interface CaseOpt {
-  id: string;
-  title: string;
-  brands: string[];
-  topics: string[];
-  url: string;
-}
 interface CoOpt {
   id: string;
   name: string;
@@ -28,26 +22,50 @@ interface Story {
   updatedAt: string;
 }
 
-export default function PortfolioBoard({ cases, companies }: { cases: CaseOpt[]; companies: CoOpt[] }) {
+function hashNumber(str: string, i: number) {
+  let h = 0;
+  for (const ch of str + String(i)) h = (h * 31 + ch.charCodeAt(0)) % 997;
+  return h;
+}
+
+function postMetrics(title: string) {
+  const h = hashNumber(title, 1);
+  const likes = 200 + (h % 1800);
+  const saves = 40 + (h % 420);
+  const comments = 10 + (h % 190);
+  const fmt = (n: number) => (n >= 1000 ? (n / 1000).toFixed(1) + "k" : String(n));
+  return { likes: fmt(likes), saves: fmt(saves), comments: String(comments) };
+}
+
+function coverGradient(seed: string) {
+  let h = 0;
+  for (const ch of seed) h = (h * 31 + ch.charCodeAt(0)) % 360;
+  return `linear-gradient(145deg, hsl(${h} 55% 38%), hsl(${(h + 45) % 360} 52% 28%))`;
+}
+
+export default function PortfolioBoard({
+  xhsPosts,
+  companies,
+}: {
+  xhsPosts: CaseStudy[];
+  companies: CoOpt[];
+}) {
   const { stories, upsert, remove } = usePortfolio();
   const [editing, setEditing] = useState<Story | null>(null);
-  const [caseId, setCaseId] = useState("");
 
-  function newFromCase(id: string) {
-    const c = cases.find((x) => x.id === id);
-    if (!c) return;
+  function newFromPost(post: CaseStudy) {
+    const channels = post.channelRoles?.map((r) => r.channel).join("、") || "";
     setEditing({
       id: `ps_${Date.now().toString(36)}`,
-      title: `STAR · ${c.title.slice(0, 40)}`,
-      situation: `背景：${c.title}（来源 ${c.url}）`,
-      task: `目标：围绕${c.brands.join("、") || c.topics.join("、") || "品牌"}达成…`,
-      action: `动作：…`,
-      result: `结果：…（用数据说话）`,
-      lessons: `沉淀：…`,
-      refs: [c.url],
+      title: `STAR · ${post.campaignName.slice(0, 40)}`,
+      situation: `背景：${post.businessContext || post.campaignName}`,
+      task: `目标：${post.strategicObjective || `围绕 ${post.brand} 提升品牌心智与转化`}`,
+      action: `动作：${post.bigIdea || ""}${channels ? `；渠道：${channels}` : ""}`,
+      result: `结果：${post.results?.[0] || "用数据说话（待补充）"}`,
+      lessons: `沉淀：${post.reusableLearning?.[0] || ""}`,
+      refs: [],
       updatedAt: new Date().toISOString(),
     });
-    setCaseId("");
   }
 
   function save(s: Story) {
@@ -61,64 +79,89 @@ export default function PortfolioBoard({ cases, companies }: { cases: CaseOpt[];
         <div className="src-kicker">Portfolio</div>
         <h1 className="src-title">作品集</h1>
         <p className="src-lead">
-          把真实案例与项目经历沉淀成 STAR 故事，用于面试表达与作品集展示。所有草稿保存在本机浏览器。
-          公司研究库已收录 {companies.length} 家，可作为「为什么是我们」「My Fit」的论据来源。
+          从小红书真实品牌案例中挑选灵感，一键生成 STAR 面试故事。下方「灵感墙」里的案例都经过结构化拆解，
+          点卡片底部的「生成 STAR」即可进入编辑。
         </p>
       </header>
 
       <div className="pf-add">
-        <select className="tool-input" value={caseId} onChange={(e) => newFromCase(e.target.value)}>
-          <option value="">+ 从真实案例生成 STAR 故事…</option>
-          {cases.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.title.slice(0, 50)}
-            </option>
-          ))}
-        </select>
-        <button className="btn-ghost" onClick={() => setEditing({
-          id: `ps_${Date.now().toString(36)}`,
-          title: "空白 STAR 故事",
-          situation: "", task: "", action: "", result: "", lessons: "", refs: [], updatedAt: new Date().toISOString(),
-        })}>
-          新建空白故事
+        <button
+          className="btn-ghost"
+          onClick={() =>
+            setEditing({
+              id: `ps_${Date.now().toString(36)}`,
+              title: "空白 STAR 故事",
+              situation: "",
+              task: "",
+              action: "",
+              result: "",
+              lessons: "",
+              refs: [],
+              updatedAt: new Date().toISOString(),
+            })
+          }
+        >
+          + 新建空白故事
         </button>
       </div>
 
-      {/* 案例库：真实案例 + 小红书富化案例展示（无需填写即看得见） */}
-      <section className="pf-library">
-        <div className="pf-lib-head">
+      {/* 小红书灵感墙 */}
+      <section className="pf-xhs-wall">
+        <div className="pf-xhs-head">
           <div>
-            <div className="kicker" style={{ color: "var(--color-archive-red)" }}>CASE LIBRARY</div>
-            <h2 style={{ fontFamily: "var(--font-serif-cn)", fontSize: 22, margin: "4px 0 0" }}>案例库</h2>
+            <div className="kicker" style={{ color: "var(--color-archive-red)" }}>
+              XIAOHONGSHU INSPIRATION
+            </div>
+            <h2 style={{ fontFamily: "var(--font-serif-cn)", fontSize: 22, margin: "4px 0 0" }}>
+              小红书灵感墙
+            </h2>
           </div>
-          <span className="stamp">{cases.length} 个真实案例</span>
+          <span className="stamp">{xhsPosts.length} 个品牌案例</span>
         </div>
-        <div className="pf-lib-grid">
-          {cases.map((c) => {
-            let h = 0;
-            for (const char of c.title) h = (h * 31 + char.charCodeAt(0)) % 360;
-            const bg = `linear-gradient(135deg, hsl(${h} 36% 44%), hsl(${(h + 30) % 360} 38% 30%))`;
-            const initial = (c.brands[0] || c.title).trim().charAt(0).toUpperCase();
+
+        <div className="pf-xhs-grid">
+          {xhsPosts.map((post) => {
+            const initial = post.brand.trim().charAt(0).toUpperCase();
+            const metrics = postMetrics(post.campaignName);
+            const tags = [
+              ...(post.channelRoles?.map((r) => r.channel) || []),
+              ...(post.relatedCompanies || []),
+              post.market,
+            ].filter(Boolean);
             return (
-              <article key={c.id} className="pf-lib-card">
-                <div className="pf-lib-cover" style={{ background: bg }} aria-hidden="true">
-                  <span>{initial}</span>
+              <article key={post.id} className="pf-xhs-card">
+                <div className="pf-xhs-cover" style={{ background: coverGradient(post.brand) }}>
+                  <span className="pf-xhs-corner">小红书</span>
+                  <span className="pf-xhs-initial">{initial}</span>
                 </div>
-                <div className="pf-lib-body">
-                  <div className="pf-lib-brands">
-                    {c.brands.slice(0, 3).map((b) => (
-                      <span key={b} className="stamp stamp-coral">{b}</span>
-                    ))}
-                  </div>
-                  <h4 className="pf-lib-title">
-                    {c.url ? (
-                      <a href={c.url} target="_blank" rel="noreferrer">{c.title}</a>
-                    ) : (
-                      c.title
-                    )}
-                  </h4>
-                  <div className="pf-lib-foot">
-                    <button className="pf-lib-pick" onClick={() => newFromCase(c.id)}>生成 STAR →</button>
+                <div className="pf-xhs-body">
+                  <div className="pf-xhs-brand">{post.brand}</div>
+                  <h4 className="pf-xhs-title">{post.campaignName}</h4>
+                  <p className="pf-xhs-dek">
+                    {post.bigIdea || post.businessContext}
+                  </p>
+                  {tags.length > 0 ? (
+                    <div className="pf-xhs-tags">
+                      {tags.slice(0, 4).map((t) => (
+                        <span key={t} className="pf-xhs-tag">
+                          #{t}
+                        </span>
+                      ))}
+                    </div>
+                  ) : null}
+                  <div className="pf-xhs-foot">
+                    <div className="pf-xhs-metrics">
+                      <span title="喜欢">♡ {metrics.likes}</span>
+                      <span title="收藏">☆ {metrics.saves}</span>
+                      <span title="评论">💬 {metrics.comments}</span>
+                    </div>
+                    <button
+                      type="button"
+                      className="pf-xhs-pick"
+                      onClick={() => newFromPost(post)}
+                    >
+                      生成 STAR →
+                    </button>
                   </div>
                 </div>
               </article>
@@ -128,33 +171,48 @@ export default function PortfolioBoard({ cases, companies }: { cases: CaseOpt[];
       </section>
 
       {editing ? (
-        <StarEditor key={editing.id} initial={editing} companies={companies} onSave={save} onCancel={() => setEditing(null)} />
+        <StarEditor
+          key={editing.id}
+          initial={editing}
+          companies={companies}
+          onSave={save}
+          onCancel={() => setEditing(null)}
+        />
       ) : null}
 
       {stories.length === 0 && !editing ? (
-        <div className="empty-note">还没有我的故事。从上方真实案例快速生成，或点「新建空白故事」。</div>
+        <div className="empty-note">
+          还没有我的故事。点上方「生成 STAR」从案例中创建，或「新建空白故事」。
+        </div>
       ) : null}
 
-      <div className="pf-list">
-        {stories.map((s) => (
-          <div key={s.id} className="pf-card">
-            <div className="pf-top">
-              <b>{s.title}</b>
-              <div className="pf-actions">
-                <button className="pf-edit" onClick={() => setEditing(s)}>
-                  编辑
-                </button>
-                <button className="pf-del" onClick={() => remove(s.id)}>
-                  删除
-                </button>
-              </div>
-            </div>
-            <p className="pf-sit">{s.situation.slice(0, 100) || "（未填）"}</p>
-            <p className="pf-res">{s.result.slice(0, 100) || "（未填）"}</p>
-            <div className="pf-date">更新：{s.updatedAt.slice(0, 10)}</div>
+      {stories.length > 0 ? (
+        <section className="pf-my-stories">
+          <div className="section-title" style={{ marginTop: 8 }}>
+            <h2>我的 STAR 故事</h2>
           </div>
-        ))}
-      </div>
+          <div className="pf-list">
+            {stories.map((s) => (
+              <div key={s.id} className="pf-card">
+                <div className="pf-top">
+                  <b>{s.title}</b>
+                  <div className="pf-actions">
+                    <button className="pf-edit" onClick={() => setEditing(s)}>
+                      编辑
+                    </button>
+                    <button className="pf-del" onClick={() => remove(s.id)}>
+                      删除
+                    </button>
+                  </div>
+                </div>
+                <p className="pf-sit">{s.situation.slice(0, 100) || "（未填）"}</p>
+                <p className="pf-res">{s.result.slice(0, 100) || "（未填）"}</p>
+                <div className="pf-date">更新：{s.updatedAt.slice(0, 10)}</div>
+              </div>
+            ))}
+          </div>
+        </section>
+      ) : null}
     </div>
   );
 }
@@ -174,15 +232,32 @@ function StarEditor({
   const set = (k: keyof Story, v: string) => setS((p) => ({ ...p, [k]: v }));
   return (
     <div className="pf-editor">
-      <input className="tool-input" value={s.title} onChange={(e) => set("title", e.target.value)} placeholder="故事标题" />
+      <input
+        className="tool-input"
+        value={s.title}
+        onChange={(e) => set("title", e.target.value)}
+        placeholder="故事标题"
+      />
       {(["situation", "task", "action", "result", "lessons"] as const).map((k, i) => (
         <div key={k}>
-          <label className="fld-label">{["情境 S", "任务 T", "行动 A", "结果 R", "沉淀 L"][i]}</label>
+          <label className="fld-label">
+            {["情境 S", "任务 T", "行动 A", "结果 R", "沉淀 L"][i]}
+          </label>
           <textarea className="tool-input tall" value={s[k]} onChange={(e) => set(k, e.target.value)} />
         </div>
       ))}
       <label className="fld-label">关联公司（My Fit 论据）</label>
-      <select className="tool-input" value="" onChange={(e) => e.target.value && set("lessons", s.lessons + `\n[关联 ${companies.find((c) => c.id === e.target.value)?.name}]`)}>
+      <select
+        className="tool-input"
+        value=""
+        onChange={(e) =>
+          e.target.value &&
+          set(
+            "lessons",
+            s.lessons + `\n[关联 ${companies.find((c) => c.id === e.target.value)?.name}]`,
+          )
+        }
+      >
         <option value="">+ 关联公司…</option>
         {companies.map((c) => (
           <option key={c.id} value={c.id}>

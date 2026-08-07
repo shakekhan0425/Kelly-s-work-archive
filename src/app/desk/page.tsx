@@ -51,6 +51,12 @@ export default async function DeskPage() {
           Daily Desk
         </span>
         <div className="desk-hero-grid">
+          <div className="desk-hero-stamp" aria-hidden="true">
+            <div className="desk-hero-stamp-inner">
+              <span>Archive</span>
+              <span>Today</span>
+            </div>
+          </div>
           <div className="desk-hero-text">
             <div className="eyebrow" style={{ marginBottom: 8 }}>
               Today’s Issue · {today}
@@ -101,19 +107,23 @@ export default async function DeskPage() {
         </div>
       </section>
 
-      {/* B. Today's Intelligence（5 行业变化 / 1 案例 / 1 公司 / 1 播客 / 1 英语） */}
+      {/* B. Today's Intelligence — 杂志版两栏：左侧列表 / 右侧卡片 */}
       <section className="paper-panel" style={{ padding: 18, marginBottom: 22 }}>
         <span className="bookmark-fold" aria-hidden="true" />
         <SectionHeader eyebrow="Today’s Intelligence" title="今日情报" />
         <div className="ti-grid">
           <div className="ti-changes">
-            <div className="ti-h">5 个行业变化</div>
+            <div className="ti-h">{ti.changes.length} 个行业变化</div>
             {ti.changes.map((s) => (
               <Link key={s.id} href={`/signals/${s.id}`} className="ti-change">
                 <span className="ti-vert">{s.category}</span>
                 <span className="ti-ct">{s.title}</span>
+                <span className="ti-time">{s.publishedAt ? s.publishedAt.slice(11, 16) : ""}</span>
               </Link>
             ))}
+            <Link href="/signals" className="ti-more">
+              打开情报库 →
+            </Link>
           </div>
           <div className="ti-side">
             {ti.caseItem ? (
