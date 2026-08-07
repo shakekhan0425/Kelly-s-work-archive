@@ -130,29 +130,29 @@ h3 {
   }
 }
 
-/* Binder sidebar (left nav) */
+/* Binder sidebar (left nav) — light paper, oxblood only as accent (≤12%) */
 .binder {
   position: relative;
-  background: var(--color-oxblood);
-  color: var(--color-paper-light);
-  border-right: 1px solid rgba(0, 0, 0, 0.25);
+  background: var(--color-paper-light);
+  color: var(--color-ink);
+  border-right: 1px solid var(--color-line);
   padding: 22px 0 16px;
   display: flex;
   flex-direction: column;
   min-height: 100vh;
 }
 .binder::before {
-  /* spine highlight */
+  /* spine highlight — thin oxblood accent line */
   content: "";
   position: absolute;
   top: 0;
   right: 0;
-  width: 3px;
+  width: 2px;
   height: 100%;
   background: linear-gradient(
     to bottom,
-    rgba(0, 0, 0, 0.35),
-    rgba(0, 0, 0, 0.1)
+    var(--color-archive-red),
+    rgba(169, 42, 44, 0.1)
   );
 }
 .binder-brand {
@@ -160,7 +160,8 @@ h3 {
   font-size: 22px;
   line-height: 1;
   padding: 0 22px 14px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  border-bottom: 1px solid var(--color-line);
+  color: var(--color-ink);
 }
 .binder-brand small {
   display: block;
@@ -185,20 +186,30 @@ h3 {
   gap: 11px;
   padding: 9px 12px;
   border-radius: 6px;
-  color: rgba(250, 247, 241, 0.82);
+  color: var(--color-ink-muted);
   font-size: 14px;
   font-family: var(--font-sans);
   transition: background 0.15s ease, color 0.15s ease;
   position: relative;
 }
 .binder-link:hover {
-  background: rgba(255, 255, 255, 0.08);
-  color: #fff;
+  background: var(--color-paper-dark);
+  color: var(--color-ink);
   text-decoration: none;
 }
 .binder-link[aria-current="page"] {
+  background: rgba(169, 42, 44, 0.1);
+  color: var(--color-archive-red);
+}
+.binder-link[aria-current="page"]::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 9px;
+  bottom: 9px;
+  width: 3px;
+  border-radius: 2px;
   background: var(--color-archive-red);
-  color: var(--color-paper-light);
 }
 .binder-link svg {
   width: 18px;
@@ -213,7 +224,7 @@ h3 {
   text-transform: uppercase;
   letter-spacing: 0.12em;
   font-size: 10px;
-  opacity: 0.6;
+  opacity: 0.55;
   margin-left: auto;
 }
 .binder-badge {
@@ -228,7 +239,7 @@ h3 {
 }
 .binder-foot {
   padding: 12px;
-  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  border-top: 1px solid var(--color-line);
   margin-top: 8px;
 }
 

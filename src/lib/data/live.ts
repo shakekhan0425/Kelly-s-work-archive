@@ -241,20 +241,21 @@ export async function getCompaniesLive(limit?: number): Promise<CompanyRef[]> {
 }
 
 export async function getPodcastChannelsLive(): Promise<PodcastChannelWithHealth[]> {
-  const a = await getArchiveLive();
   const src = liveSource();
-  // Supabase 模式：直接用库中写入的频道
-  if (src === "supabase" && (a.podcasts as unknown as PodcastChannelWithHealth[]).length) {
-    return a.podcasts as unknown as PodcastChannelWithHealth[];
-  }
-  // 本地回退：频道来自真实 RSS 抓取产物（podcasts.episodes.json 的 channels 段），
+  // 频道始终来自真实 RSS 注册表（podcasts.episodes.json 的 channels 段），
   // 绝不能用 archive.json 的「播客文章」冒充频道。
+  // health 由真实单集数计算（Supabase 模式下单集来自库内 episodes 表）。
   const base = getPodcastChannels();
   const byCh = new Map<string, number>();
   for (const e of liveOverrides.episodes) byCh.set(e.channelId, (byCh.get(e.channelId) ?? 0) + 1);
   return base.map((c) => ({
     ...c,
-    health: { ok: (byCh.get(c.id) ?? 0) > 0, count: byCh.get(c.id) ?? 0, lastSuccessAt: "", source: "json" },
+    health: {
+      ok: (byCh.get(c.id) ?? 0) > 0,
+      count: byCh.get(c.id) ?? 0,
+      lastSuccessAt: "",
+      source: src,
+    },
   }));
 }
 
