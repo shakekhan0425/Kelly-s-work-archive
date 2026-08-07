@@ -86,12 +86,18 @@ export default async function DeskPage() {
               </Link>
             </div>
           </div>
-          {recent[0]?.hero ? (
-            <div className="hero-film desk-hero-img">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
+          <div className="hero-film desk-hero-img">
+            {recent[0]?.hero ? (
+              // eslint-disable-next-line @next/next/no-img-element
               <img src={recent[0].hero} alt="" loading="eager" />
+            ) : null}
+            <div className="desk-hero-cap">
+              <span className="desk-hero-cap-k">{today}</span>
+              <span className="desk-hero-cap-t">
+                {recent[0]?.title ?? "每日工作档案馆"}
+              </span>
             </div>
-          ) : null}
+          </div>
         </div>
       </section>
 

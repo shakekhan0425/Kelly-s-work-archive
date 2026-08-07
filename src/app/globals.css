@@ -2722,12 +2722,45 @@ a:active, button:active, .btn:active, .chip:active, .icon-btn:active, .fav-btn:a
 .desk-hero-img {
   min-height: 260px;
   position: relative;
+  background: linear-gradient(135deg, var(--color-oxblood) 0%, #3a2230 55%, #5a3b2c 100%);
 }
 .desk-hero-img img {
   width: 100%;
   height: 100%;
   object-fit: cover;
   display: block;
+}
+/* 胶片旅行字幕条：右下角日期 + 标题，强化杂志感 */
+.desk-hero-cap {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  color: #f7f3ec;
+  background: linear-gradient(0deg, rgba(20, 18, 17, 0.72), transparent);
+  z-index: 2;
+}
+.desk-hero-cap-k {
+  font-family: var(--font-condensed);
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  font-size: 11px;
+  opacity: 0.82;
+}
+.desk-hero-cap-t {
+  font-family: var(--font-serif-cn);
+  font-size: 15px;
+  line-height: 1.4;
+  font-weight: 600;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 @media (max-width: 760px) {
   .desk-hero-grid {
