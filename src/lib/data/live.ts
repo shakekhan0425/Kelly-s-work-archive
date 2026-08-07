@@ -163,6 +163,12 @@ async function supabaseArchive(client: SupabaseClient): Promise<Archive> {
     sources,
   };
 
+  // 防御：Supabase 虽连通但返回空档案（常见于 RLS 静默拦截 SELECT / 表尚未灌数据），
+  // 不能当成「实时空库」——否则详情页全部 404。此时抛出，让 getArchiveLive 回退本地 JSON。
+  if (signals.length === 0 && cases.length === 0 && podcasts.length === 0 && companies.length === 0) {
+    throw new Error("Supabase 返回空档案（可能 RLS 拦截 SELECT 或表尚未灌数据），回退本地 JSON");
+  }
+
   // 把运行期派生需要但 archive.json 未必包含的常量指向 Supabase 数据
   liveOverrides.companyRegistry = LIVE_COMPANY_REGISTRY;
   liveOverrides.episodes = LIVE_EPISODES;

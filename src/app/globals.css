@@ -131,7 +131,7 @@ h3 {
 }
 @media (min-width: 1280px) {
   .wa-app {
-    grid-template-columns: 244px 1fr;
+    grid-template-columns: 228px 1fr;
   }
 }
 
@@ -146,20 +146,7 @@ h3 {
   flex-direction: column;
   min-height: 100vh;
 }
-.binder::before {
-  /* spine highlight — thin oxblood accent line */
-  content: "";
-  position: absolute;
-  top: 0;
-  right: 0;
-  width: 2px;
-  height: 100%;
-  background: linear-gradient(
-    to bottom,
-    var(--color-archive-red),
-    rgba(169, 42, 44, 0.1)
-  );
-}
+/* binder spine removed per light-editorial spec (no red vertical line) */
 .binder-brand {
   font-family: var(--font-display);
   font-size: 22px;
@@ -258,6 +245,7 @@ h3 {
 
 /* Decorative binder rings on the main paper edge (aria-hidden) */
 .ring-rail {
+  display: none; /* 活页孔装饰已移除（轻盈编辑感） */
   position: absolute;
   left: 0;
   top: 0;
@@ -291,7 +279,7 @@ h3 {
   display: flex;
   align-items: center;
   gap: 14px;
-  padding: 12px 28px 12px 40px;
+  padding: 9px 26px 9px 32px;
   background: rgba(242, 238, 230, 0.9);
   backdrop-filter: blur(6px);
   border-bottom: 1px solid var(--color-line);
@@ -344,6 +332,11 @@ h3 {
   background: var(--color-archive-red);
   border-color: var(--color-archive-red);
   color: var(--color-paper-light);
+}
+/* Topbar Save 按钮减重 */
+.utility-bar .btn-primary {
+  padding: 6px 13px;
+  font-size: 12.5px;
 }
 .btn-primary:hover {
   background: var(--color-oxblood);
@@ -2613,104 +2606,6 @@ a:hover {
 }
 .cb-v { flex: 1; font-family: var(--font-serif); font-size: 14px; color: var(--color-ink-soft); margin: 0; line-height: 1.7; }
 
-/* ─────────── Desk · Today's Intelligence ─────────── */
-.ti-grid { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(260px, 1fr); gap: 28px; }
-@media (max-width: 860px) { .ti-grid { grid-template-columns: 1fr; } }
-.ti-changes { display: flex; flex-direction: column; gap: 6px; }
-.ti-h {
-  font-family: var(--font-condensed);
-  font-size: 11px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: var(--color-ink-muted);
-  margin-bottom: 4px;
-}
-.ti-change {
-  display: flex;
-  gap: 12px;
-  align-items: baseline;
-  text-decoration: none;
-  padding: 10px 12px;
-  border-radius: 8px;
-  transition: background 0.14s ease;
-}
-.ti-change:hover { background: rgba(25, 24, 23, 0.03); }
-.ti-change:hover .ti-ct { color: var(--color-archive-red); }
-.ti-vert {
-  flex: 0 0 72px;
-  font-family: var(--font-condensed);
-  font-size: 10px;
-  font-weight: 700;
-  color: var(--color-archive-red);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-.ti-ct {
-  font-family: var(--font-serif-cn);
-  font-size: 15px;
-  color: var(--color-ink);
-  line-height: 1.5;
-  flex: 1;
-}
-.ti-time {
-  font-family: var(--font-condensed);
-  font-size: 11px;
-  color: var(--color-ink-muted);
-  flex: none;
-}
-.ti-more {
-  font-size: 13px;
-  color: var(--color-archive-red);
-  margin-top: 4px;
-  padding-left: 12px;
-}
-.ti-more:hover { text-decoration: underline; }
-.ti-side { display: flex; flex-direction: column; gap: 10px; }
-.ti-feature {
-  display: block;
-  text-decoration: none;
-  padding: 14px 16px;
-  border-radius: 10px;
-  background: var(--color-paper-light);
-  border: 1px solid var(--color-line);
-  transition: transform 0.12s ease, box-shadow 0.14s ease, border-color 0.14s ease, background 0.12s ease;
-}
-.ti-feature:hover {
-  background: #fff;
-  border-color: var(--color-line-strong);
-  box-shadow: 0 6px 18px rgba(25, 24, 23, 0.06);
-  transform: translateY(-2px);
-}
-.ti-feature:nth-child(4n+1) { border-left: 3px solid var(--color-archive-red); }
-.ti-feature:nth-child(4n+2) { border-left: 3px solid var(--color-olive); }
-.ti-feature:nth-child(4n+3) { border-left: 3px solid var(--color-coral); }
-.ti-feature:nth-child(4n+4) { border-left: 3px solid var(--color-lavender); }
-.ti-tag {
-  font-family: var(--font-sans);
-  font-size: 10px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--color-ink-muted);
-}
-.ti-ft {
-  display: block;
-  font-family: var(--font-serif);
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--color-ink);
-  margin-top: 5px;
-  line-height: 1.35;
-}
-.ti-fs {
-  display: block;
-  font-family: var(--font-sans);
-  font-size: 12px;
-  color: var(--color-ink-muted);
-  margin-top: 5px;
-  line-height: 1.55;
-}
 
 /* ─────────── Marketing Toolkit · 框架 / 模版 / 提示词 / 研究 ─────────── */
 .fw-grid {
@@ -2944,65 +2839,77 @@ a:active, button:active, .btn:active, .chip:active, .icon-btn:active, .fav-btn:a
 }
 .topic-pills::-webkit-scrollbar { display: none; }
 
-/* 11. Desk 首页 Film Travel Hero —— 更清澈透亮 */
+/* 11. Desk 首页 —— Light Editorial Archive · Europe Film Photography */
 .desk-hero-wrap {
   background: var(--color-paper-light);
   border: 1px solid var(--color-line);
   border-radius: 14px;
   overflow: hidden;
-  box-shadow: 0 2px 8px rgba(25, 24, 23, 0.04);
 }
-.desk-hero-grid {
+.desk-hero {
+  position: relative;
   display: grid;
-  grid-template-columns: 1.1fr 1fr;
+  grid-template-columns: 46% 54%;
   gap: 0;
   align-items: stretch;
+  min-height: 360px;
 }
 .desk-hero-text {
-  padding: 34px 36px;
+  position: relative;
+  z-index: 2;
+  padding: 38px 40px 34px;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   justify-content: center;
-  gap: 16px;
+  gap: 14px;
+  background: var(--color-paper-light);
 }
-.desk-hero-meta {
+.desk-hero-kicker {
   display: flex;
-  align-items: center;
-  gap: 10px;
+  align-items: baseline;
+  gap: 12px;
   flex-wrap: wrap;
 }
+.desk-hero-handwritten {
+  font-family: "Segoe Script", "Bradley Hand", "Snell Roundhand", cursive;
+  font-style: italic;
+  font-size: 22px;
+  color: var(--color-archive-red);
+  background-image: linear-gradient(var(--color-archive-red), var(--color-archive-red));
+  background-size: 0% 2px;
+  background-repeat: no-repeat;
+  background-position: 0 100%;
+  animation: deskUnderline 0.9s ease-out 0.35s forwards;
+}
+@keyframes deskUnderline { to { background-size: 100% 2px; } }
 .desk-hero-issue {
   font-family: var(--font-condensed);
   text-transform: uppercase;
   letter-spacing: 0.14em;
   font-size: 11px;
-  color: var(--color-archive-red);
-}
-.desk-hero-date {
-  font-family: var(--font-sans);
-  font-size: 12px;
   color: var(--color-ink-muted);
 }
 .desk-hero-title {
   font-family: var(--font-display);
-  font-size: clamp(30px, 3.2vw, 42px);
-  line-height: 1.08;
+  font-size: clamp(30px, 3.4vw, 44px);
+  line-height: 1.06;
   margin: 0;
   letter-spacing: -0.02em;
+  color: var(--color-ink);
 }
-.desk-hero-lead {
-  font-family: var(--font-serif-cn);
-  font-size: 15px;
-  line-height: 1.75;
-  color: var(--color-ink-muted);
-  max-width: 44ch;
-  margin: 0;
-}
-.desk-hero-tags {
+.desk-hero-badges {
   display: flex;
+  align-items: center;
   gap: 8px;
   flex-wrap: wrap;
+}
+.desk-hero-no {
+  font-family: var(--font-condensed);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 11px;
+  color: var(--color-ink-muted);
 }
 .desk-hero-pill {
   font-family: var(--font-sans);
@@ -3012,13 +2919,6 @@ a:active, button:active, .btn:active, .chip:active, .icon-btn:active, .fav-btn:a
   border: 1px solid var(--color-line);
   border-radius: 999px;
   padding: 4px 12px;
-}
-.desk-hero-cta {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-  margin-top: 2px;
 }
 .desk-hero-live {
   font-family: var(--font-sans);
@@ -3035,87 +2935,220 @@ a:active, button:active, .btn:active, .chip:active, .icon-btn:active, .fav-btn:a
   background: rgba(25, 24, 23, 0.04);
   border-color: var(--color-line);
 }
-.desk-hero-img {
-  min-height: 280px;
+.desk-hero-visual {
   position: relative;
-  background: linear-gradient(135deg, #f0e8dd 0%, #e8ddd0 55%, #ddd2c5 100%);
   overflow: hidden;
+  background: var(--color-paper-light);
 }
-.desk-hero-img img {
+.desk-hero-image {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
   display: block;
-  filter: saturate(0.95) contrast(1.01);
+  -webkit-mask-image: linear-gradient(to left, #000 62%, transparent 100%);
+  mask-image: linear-gradient(to left, #000 62%, transparent 100%);
+  transform-origin: 62% 50%;
+  animation: deskHeroKenBurns 16s ease-out forwards;
 }
-/* 胶片旅行字幕条：更轻、更透 */
-.desk-hero-cap {
+@keyframes deskHeroKenBurns {
+  from { transform: scale(1.07); }
+  to { transform: scale(1); }
+}
+.desk-hero-actions {
   position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  padding: 16px 18px;
+  right: 26px;
+  bottom: 24px;
+  z-index: 3;
   display: flex;
-  flex-direction: column;
-  gap: 3px;
-  color: #fff;
-  background: linear-gradient(0deg, rgba(25, 24, 23, 0.55), transparent);
-  z-index: 2;
+  gap: 10px;
 }
-.desk-hero-cap span:first-child {
+.desk-hero-cta {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 600;
+  color: #fff;
+  background: rgba(25, 24, 23, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 999px;
+  padding: 9px 16px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  text-decoration: none;
+  transition: transform 0.12s ease, background 0.18s ease;
+}
+.desk-hero-cta.primary {
+  background: var(--color-archive-red);
+  border-color: transparent;
+}
+.desk-hero-cta:hover { transform: translateY(-1px); background: rgba(25, 24, 23, 0.68); }
+.desk-hero-cta.primary:hover { background: #7d1526; }
+.desk-hero-cta:active { transform: scale(0.97); }
+
+/* ── Today's Intelligence：无边框列表 ── */
+.desk-today { margin-top: 28px; }
+.desk-today-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 10px;
+}
+.desk-handwritten {
+  font-family: "Segoe Script", "Bradley Hand", "Snell Roundhand", cursive;
+  font-style: italic;
+  font-size: 17px;
+  color: var(--color-archive-red);
+  display: block;
+  margin-bottom: 2px;
+}
+.desk-section-title {
+  font-family: var(--font-display);
+  font-size: 24px;
+  margin: 0;
+  letter-spacing: -0.01em;
+  color: var(--color-ink);
+}
+.desk-today-count {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  color: var(--color-ink-muted);
+}
+.desk-today-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 24px;
+  align-items: start;
+}
+.ti-list { display: flex; flex-direction: column; }
+.ti-row {
+  display: grid;
+  grid-template-columns: 92px 1fr 50px 20px;
+  align-items: center;
+  gap: 14px;
+  padding: 13px 8px;
+  border-bottom: 1px solid rgba(40, 35, 30, 0.08);
+  text-decoration: none;
+  color: inherit;
+  transition: background 0.14s ease, transform 0.14s ease;
+}
+.ti-row:hover { background: rgba(143, 23, 38, 0.025); }
+.ti-row:hover .ti-headline { transform: translateX(2px); }
+.ti-row:hover .ti-arrow { transform: translateX(3px); color: var(--color-archive-red); }
+.ti-row:active { transform: scale(0.997); }
+.ti-cat {
   font-family: var(--font-condensed);
   text-transform: uppercase;
-  letter-spacing: 0.14em;
-  font-size: 11px;
-  opacity: 0.85;
+  letter-spacing: 0.06em;
+  font-size: 10.5px;
+  color: var(--color-ink-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
-.desk-hero-cap span:last-child {
+.ti-headline {
   font-family: var(--font-serif-cn);
   font-size: 15px;
-  line-height: 1.45;
-  font-weight: 600;
+  color: var(--color-ink);
+  line-height: 1.4;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: transform 0.16s ease;
+}
+.ti-time {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  color: var(--color-ink-muted);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.ti-arrow { color: var(--color-ink-muted); transition: transform 0.16s ease, color 0.16s ease; }
+.ti-row.more .ti-headline { font-weight: 600; color: var(--color-archive-red); }
+
+/* ── Right rail：杂志小卡（无红粗边 / 无 dashboard 卡） ── */
+.desk-rail { display: flex; flex-direction: column; gap: 12px; }
+.rail-card {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+  background: var(--color-paper);
+  border: 1px solid var(--color-line);
+  border-radius: 10px;
+  padding: 13px 14px;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+}
+.rail-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(25, 24, 23, 0.06);
+  border-color: rgba(143, 23, 38, 0.2);
+}
+.rail-card:active { transform: scale(0.99); }
+.rail-card-head { display: flex; align-items: baseline; gap: 8px; margin-bottom: 8px; }
+.rail-handwritten {
+  font-family: "Segoe Script", "Bradley Hand", "Snell Roundhand", cursive;
+  font-style: italic;
+  font-size: 14px;
+  color: var(--color-archive-red);
+}
+.rail-label { font-family: var(--font-sans); font-size: 12px; color: var(--color-ink-muted); }
+.rail-card-body { display: flex; align-items: center; gap: 12px; }
+.rail-card-body > div:first-child { flex: 1; min-width: 0; }
+.rail-card-title {
+  font-family: var(--font-serif-cn);
+  font-size: 14.5px;
+  color: var(--color-ink);
+  line-height: 1.35;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
-/* 邮票装饰 */
-.desk-hero-stamp {
-  position: absolute;
-  top: 18px;
-  right: 18px;
-  z-index: 3;
-  width: 58px;
-  height: 72px;
-  background: rgba(250, 247, 241, 0.9);
-  border: 1px dashed var(--color-line-strong);
-  padding: 4px;
-  transform: rotate(5deg);
-  box-shadow: 0 3px 10px rgba(25, 24, 23, 0.12);
-  font-family: var(--font-condensed);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  font-size: 9px;
-  line-height: 1.2;
-  color: var(--color-archive-red);
+.rail-card-meta {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  color: var(--color-ink-muted);
+  margin-top: 3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.rail-card-media {
+  width: 60px;
+  height: 60px;
+  border-radius: 7px;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: rgba(25, 24, 23, 0.05);
+}
+.rail-card-media img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.rail-card-media.round {
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  text-align: center;
+  color: #fff;
+  font-family: var(--font-display);
+  font-size: 22px;
 }
+.rail-wave { display: flex; align-items: flex-end; gap: 2px; height: 22px; margin-top: 6px; }
+.rail-wave i { width: 2px; background: var(--color-archive-red); opacity: 0.5; border-radius: 2px; }
+
+/* ── Footer ── */
+.desk-foot { display: flex; align-items: center; gap: 16px; margin: 34px 0 6px; }
+.desk-foot .desk-handwritten { font-size: 15px; }
+.desk-foot-line { flex: 1; height: 1px; background: var(--color-line); }
+
 @media (max-width: 860px) {
-  .desk-hero-grid {
-    grid-template-columns: 1fr;
-  }
-  .desk-hero-img {
-    min-height: 200px;
-    order: -1;
-  }
-  .desk-hero-text {
-    padding: 22px;
-    gap: 12px;
-  }
+  .desk-hero { grid-template-columns: 1fr; min-height: auto; }
+  .desk-hero-visual { min-height: 220px; order: -1; }
+  .desk-hero-image { position: relative; mask-image: none; -webkit-mask-image: none; animation: none; }
+  .desk-hero-actions { position: static; justify-content: flex-start; padding: 0 24px 24px; }
+  .desk-today-grid { grid-template-columns: 1fr; }
+  .desk-hero-handwritten { animation: none; background-size: 100% 2px; }
 }
 
 /* ─────────── 播客频道封面（永不挂的字母渐变） ─────────── */

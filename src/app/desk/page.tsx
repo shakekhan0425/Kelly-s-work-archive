@@ -1,248 +1,232 @@
 import Link from "next/link";
 import { ArchiveShell } from "@/components/archive/ArchiveShell";
-import { SectionHeader } from "@/components/archive/SectionHeader";
-import { ItemBrief } from "@/components/archive/ItemRow";
 import {
   getTodayIntelligence,
   getSignalsLive,
-  getEnglishLive,
-  getPodcastsLive,
-  getVerticalsLive,
   getCompanyDossiersLive,
   getArchiveLive,
   liveSource,
+  getCaseStudyLive,
 } from "@/lib/data/live";
+import { ArrowRight } from "lucide-react";
+
+const HERO_IMAGES = [
+  "https://images.unsplash.com/photo-1523906834658-6e24ef2386f9?w=1600&q=80", // Amalfi coast
+  "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=1600&q=80", // Paris street
+  "https://images.unsplash.com/photo-1555992336-fb0d29498b13?w=1600&q=80", // Lisbon tiles
+  "https://images.unsplash.com/photo-1516483638261-f4dbaf036963?w=1600&q=80", // Cinque Terre
+];
+
+function heroImage() {
+  const day = new Date().getDate();
+  return HERO_IMAGES[day % HERO_IMAGES.length];
+}
 
 export default async function DeskPage() {
-  const today = new Intl.DateTimeFormat("zh-CN", {
+  const todayLong = new Intl.DateTimeFormat("zh-CN", {
     year: "numeric",
     month: "long",
     day: "numeric",
     weekday: "long",
   }).format(new Date());
 
-    const [ti, verticals, english, podcasts, recent, archive, dossiers] = await Promise.all([
-    getTodayIntelligence(await getArchiveLive()),
-    getVerticalsLive(),
-    getEnglishLive(4),
-    getPodcastsLive(4),
-    getSignalsLive({ limit: 8 }),
+  const todayShort = new Intl.DateTimeFormat("zh-CN", {
+    month: "long",
+    day: "numeric",
+  }).format(new Date());
+
+  const [archive, ti, recent, dossiers] = await Promise.all([
     getArchiveLive(),
+    getTodayIntelligence(await getArchiveLive()),
+    getSignalsLive({ limit: 8 }),
     getCompanyDossiersLive(),
   ]);
+
   const stats = archive.stats;
-  const companyCount = dossiers.length;
   const src = liveSource();
 
-  const sinceLast = [
-    { label: "市场情报", href: "/signals", n: stats.signals },
-    { label: "品牌案例", href: "/cases", n: stats.cases },
-    { label: "公司研究", href: "/companies", n: companyCount },
-    { label: "播客单集", href: "/podcasts", n: stats.podcasts },
-    { label: "商务英语", href: "/english", n: stats.english },
-    { label: "来源体系", href: "/sources", n: stats.sources },
-  ];
+  // Right rail picks
+  const casePick = ti.caseItem ? getCaseStudyLive(ti.caseItem.id) ?? ti.caseItem : null;
+  const companyPick = ti.company ?? dossiers[0];
+  const podcastPick = ti.podcast ?? archive.podcasts[0];
 
   return (
     <ArchiveShell>
-      {/* A. Cover Header — Film Travel Hero */}
-      <section className="desk-hero-wrap" style={{ marginBottom: 28 }}>
-        <div className="desk-hero-grid">
+      {/* ── Hero ── */}
+      <section className="desk-hero-wrap">
+        <div className="desk-hero">
           <div className="desk-hero-text">
-            <div className="desk-hero-meta">
-              <span className="desk-hero-issue">Today’s Issue</span>
-              <span className="desk-hero-date">{today}</span>
+            <div className="desk-hero-kicker">
+              <span className="desk-hero-handwritten">Daily Desk</span>
+              <span className="desk-hero-issue">TODAY&apos;S ISSUE · {todayShort}</span>
             </div>
             <h1 className="desk-hero-title">今日工作档案馆</h1>
-            <p className="desk-hero-lead">
-              每天从真实来源中整理市场情报、品牌案例与公司研究，为你的营销判断提供事实基础。
-            </p>
-            <div className="desk-hero-tags">
+            <div className="desk-hero-badges">
+              <span className="desk-hero-no">No. 001</span>
               <span className="desk-hero-pill">情报 {stats.signals}</span>
               <span className="desk-hero-pill">案例 {stats.cases}</span>
               <span className="desk-hero-pill">播客 {stats.podcasts}</span>
-            </div>
-            <div className="desk-hero-cta">
-              <Link href="/signals" className="btn btn-primary">
-                浏览最新情报 →
-              </Link>
-              <Link href="/sources" className="btn btn-ghost">
-                来源体系
-              </Link>
               {src === "supabase" ? (
-                <span className="desk-hero-live" title="数据来自 Supabase，实时更新">● 实时</span>
+                <span className="desk-hero-live">实时抓取</span>
               ) : (
-                <span className="desk-hero-live local" title="未连接 Supabase，使用本地归档数据">● 本地档案</span>
+                <span className="desk-hero-live local">本地档案</span>
               )}
             </div>
           </div>
-          <div className="desk-hero-img">
-            {recent[0]?.hero ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={recent[0].hero} alt="" loading="eager" />
-            ) : null}
-            <div className="desk-hero-cap">
-              <span>{today}</span>
-              <span>{recent[0]?.title ?? "每日工作档案馆"}</span>
-            </div>
-            <span className="desk-hero-stamp" aria-hidden="true">
-              Archive<br />Today
-            </span>
+
+          <div className="desk-hero-visual">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              className="desk-hero-image"
+              src={heroImage()}
+              alt="Europe film photography"
+              loading="eager"
+            />
+          </div>
+
+          <div className="desk-hero-actions">
+            <Link href="/signals" className="desk-hero-cta primary">
+              浏览最新情报 <ArrowRight size={14} />
+            </Link>
+            <Link href="/sources" className="desk-hero-cta">
+              来源体系
+            </Link>
           </div>
         </div>
       </section>
 
-      {/* B. Today's Intelligence — 杂志版两栏：左侧列表 / 右侧卡片 */}
-      <section style={{ marginBottom: 30 }}>
-        <SectionHeader eyebrow="Today’s Intelligence" title="今日情报" />
-        <div className="ti-grid">
-          <div className="ti-changes">
-            <div className="ti-h">{ti.changes.length} 个行业变化</div>
+      {/* ── Today&apos;s Intelligence + Right Rail ── */}
+      <section className="desk-today">
+        <div className="desk-today-header">
+          <div>
+            <span className="desk-handwritten">Today&apos;s Intelligence</span>
+            <h2 className="desk-section-title">今日情报</h2>
+          </div>
+          <span className="desk-today-count">{ti.changes.length} 个行业变化</span>
+        </div>
+
+        <div className="desk-today-grid">
+          <div className="ti-list">
             {ti.changes.map((s) => (
-              <Link key={s.id} href={`/signals/${s.id}`} className="ti-change">
-                <span className="ti-vert">{s.category}</span>
-                <span className="ti-ct">{s.title}</span>
-                <span className="ti-time">{s.publishedAt ? s.publishedAt.slice(11, 16) : ""}</span>
-              </Link>
-            ))}
-            <Link href="/signals" className="ti-more">
-              打开情报库 →
-            </Link>
-          </div>
-          <div className="ti-side">
-            {ti.caseItem ? (
-              <Link href={`/cases/${ti.caseItem.id}`} className="ti-feature">
-                <span className="ti-tag">案例</span>
-                <span className="ti-ft">{ti.caseItem.title}</span>
-                <span className="ti-fs">{ti.caseItem.sourceName}</span>
-              </Link>
-            ) : null}
-            {ti.company ? (
-              <Link href={`/companies/${ti.company.id}`} className="ti-feature">
-                <span className="ti-tag">公司动态</span>
-                <span className="ti-ft">{ti.company.name}</span>
-                <span className="ti-fs">
-                  {ti.company.recentMoves[0] ?? ti.company.overview.slice(0, 40)}
+              <Link key={s.id} href={`/signals/${s.id}`} className="ti-row">
+                <span className="ti-cat">{s.category}</span>
+                <span className="ti-headline">{s.title}</span>
+                <span className="ti-time">
+                  {s.publishedAt ? s.publishedAt.slice(11, 16) : ""}
                 </span>
+                <ArrowRight size={14} className="ti-arrow" />
               </Link>
-            ) : null}
-            {ti.podcast ? (
-              <Link href={`/podcasts/${ti.podcast.id}`} className="ti-feature">
-                <span className="ti-tag">播客</span>
-                <span className="ti-ft">{ti.podcast.title}</span>
-                <span className="ti-fs">{ti.podcast.show}</span>
-              </Link>
-            ) : null}
-            {ti.english ? (
-              <Link href={`/english#${ti.english.id}`} className="ti-feature">
-                <span className="ti-tag">English Brief</span>
-                <span className="ti-ft">{ti.english.sourceTitle}</span>
-                <span className="ti-fs">“{ti.english.sentence.slice(0, 48)}…”</span>
-              </Link>
-            ) : null}
-          </div>
-        </div>
-      </section>
-
-      {/* C. Quick Picks — 垂直速选 */}
-      <section style={{ marginBottom: 22 }}>
-        <SectionHeader eyebrow="Quick Picks" title="今日速选 · 按垂直" />
-        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-          {verticals.map((v) => (
-            <Link key={v.id} href={`/signals?v=${v.id}`} className="chip" aria-pressed="false">
-              {v.zh} · {v.label} <span style={{ opacity: 0.6 }}>{v.count}</span>
-            </Link>
-          ))}
-        </div>
-      </section>
-
-      {/* D. Since Your Last Visit */}
-      <section style={{ marginBottom: 22 }}>
-        <SectionHeader eyebrow="Since Your Last Visit" title="档案总览" />
-        <div className="grid-stats">
-          {sinceLast.map((s) => (
-            <Link key={s.label} href={s.href} className="stat-tile" style={{ textDecoration: "none" }}>
-              <span className="num">{s.n}</span>
-              <span className="lbl">{s.label}</span>
-            </Link>
-          ))}
-        </div>
-      </section>
-
-      {/* E. Daily English */}
-      <section style={{ marginBottom: 22 }}>
-        <SectionHeader
-          eyebrow="Daily English"
-          title="每日商务英语"
-          action={{ href: "/english", label: "进入英语库" }}
-        />
-        {english.length > 0 ? (
-          <div className="en-grid">
-            {english.map((e) => (
-              <a key={e.id} className="en-card" href={e.url} target="_blank" rel="noreferrer">
-                <div className="en-sentence">“{e.sentence}”</div>
-                <div className="en-terms">
-                  {e.terms.slice(0, 3).map((t) => (
-                    <span key={t} className="stamp stamp-lav">
-                      {t}
-                    </span>
-                  ))}
-                </div>
-                <div className="meta-line" style={{ marginTop: 8 }}>
-                  <span>{e.sourceName}</span>
-                </div>
-              </a>
             ))}
+            <Link href="/signals" className="ti-row more">
+              <span className="ti-cat" />
+              <span className="ti-headline">打开情报库</span>
+              <span className="ti-time" />
+              <ArrowRight size={14} className="ti-arrow" />
+            </Link>
           </div>
-        ) : (
-          <p className="list-dek">暂无英语条目。</p>
-        )}
-      </section>
 
-      {/* F. Podcast Shelf */}
-      <section style={{ marginBottom: 22 }}>
-        <SectionHeader
-          eyebrow="Podcast Shelf"
-          title="播客书架"
-          action={{ href: "/podcasts", label: "浏览播客" }}
-        />
-        {podcasts.length > 0 ? (
-          <div className="pod-grid">
-            {podcasts.map((p) => (
-              <Link key={p.id} href={`/podcasts/${p.id}`} className="pod-row">
-                {p.showImage || p.hero ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img className="pod-cover" src={p.showImage || p.hero} alt="" loading="lazy" />
-                ) : (
-                  <div className="pod-cover-empty">♪</div>
-                )}
-                <div style={{ minWidth: 0 }}>
-                  <div className="meta-line">
-                    <span style={{ color: "var(--color-archive-red)" }}>{p.show}</span>
+          <aside className="desk-rail">
+            {casePick ? (
+              <Link
+                href={`/cases/${"id" in casePick ? casePick.id : ""}`}
+                className="rail-card"
+              >
+                <div className="rail-card-head">
+                  <span className="rail-handwritten">Case</span>
+                  <span className="rail-label">案例</span>
+                </div>
+                <div className="rail-card-body">
+                  <div>
+                    <div className="rail-card-title">
+                      {"campaignName" in casePick ? casePick.campaignName : casePick.title}
+                    </div>
+                    <div className="rail-card-meta">
+                      {"brand" in casePick ? casePick.brand : casePick.sourceName}
+                      {"period" in casePick ? ` · ${casePick.period}` : ""}
+                    </div>
                   </div>
-                  <div className="pod-title">{p.title}</div>
+                  <div className="rail-card-media">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={
+                        "image" in casePick && (casePick as any).image
+                          ? (casePick as any).image
+                          : "hero" in casePick && (casePick as any).hero
+                            ? (casePick as any).hero
+                            : "https://images.unsplash.com/photo-1557804506-669a67965ba0?w=300&q=80"
+                      }
+                      alt=""
+                      loading="lazy"
+                    />
+                  </div>
                 </div>
               </Link>
-            ))}
-          </div>
-        ) : (
-          <p className="list-dek">暂无播客单集。</p>
-        )}
-      </section>
+            ) : null}
 
-      {/* G. Recent Archive */}
-      <section>
-        <SectionHeader
-          eyebrow="Recent Archive"
-          title="最近档案"
-          action={{ href: "/signals", label: "打开情报库" }}
-        />
-        <div className="col-list">
-          {recent.map((s) => (
-            <ItemBrief key={s.id} item={s} />
-          ))}
+            {companyPick ? (
+              <Link href={`/companies/${companyPick.id}`} className="rail-card">
+                <div className="rail-card-head">
+                  <span className="rail-handwritten">Company Move</span>
+                  <span className="rail-label">公司动态</span>
+                </div>
+                <div className="rail-card-body">
+                  <div>
+                    <div className="rail-card-title">{companyPick.name}</div>
+                    <div className="rail-card-meta">
+                      {companyPick.recentMoves?.[0] ?? companyPick.overview?.slice(0, 40)}
+                    </div>
+                  </div>
+                  <div
+                    className="rail-card-media round"
+                    style={{
+                      background: `linear-gradient(145deg, #b08d57, #6e7059)`,
+                    }}
+                  >
+                    <span>{companyPick.name.slice(0, 1)}</span>
+                  </div>
+                </div>
+              </Link>
+            ) : null}
+
+            {podcastPick ? (
+              <Link href={`/podcasts/${podcastPick.id}`} className="rail-card">
+                <div className="rail-card-head">
+                  <span className="rail-handwritten">Podcast</span>
+                  <span className="rail-label">播客</span>
+                </div>
+                <div className="rail-card-body">
+                  <div>
+                    <div className="rail-card-title">{podcastPick.title}</div>
+                    <div className="rail-card-meta">
+                      {(podcastPick as any).show ?? (podcastPick as any).sourceName}
+                    </div>
+                    <div className="rail-wave" aria-hidden="true">
+                      {Array.from({ length: 18 }).map((_, i) => (
+                        <i key={i} style={{ height: `${6 + Math.random() * 14}px` }} />
+                      ))}
+                    </div>
+                  </div>
+                  <div className="rail-card-media round">
+                    {"showImage" in podcastPick && podcastPick.showImage ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={podcastPick.showImage} alt="" loading="lazy" />
+                    ) : (
+                      <span>♪</span>
+                    )}
+                  </div>
+                </div>
+              </Link>
+            ) : null}
+          </aside>
         </div>
       </section>
+
+      {/* ── Footer line ── */}
+      <footer className="desk-foot">
+        <span className="desk-handwritten">Archive today.</span>
+        <span className="desk-foot-line" />
+        <span className="desk-handwritten">Inspire tomorrow.</span>
+      </footer>
     </ArchiveShell>
   );
 }
