@@ -87,8 +87,8 @@ export default async function SignalDetail({ params }: { params: Promise<{ id: s
 
         {item.thin ? (
           <div className="incomplete-banner">
-            <span className="stamp stamp-incomplete">档案未完成</span>
-            <span>本条仅含标题与摘要，正文未收录。可通过右侧「阅读原文」前往来源站点补全。</span>
+            <span className="stamp stamp-incomplete">正文待补</span>
+            <span>本条暂缺正文，点击右侧「阅读原文」可前往来源站点查看。</span>
           </div>
         ) : null}
 

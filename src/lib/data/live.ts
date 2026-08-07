@@ -71,11 +71,11 @@ function jsonArchive(): Archive {
   const file = path.join(process.cwd(), "data", "archive.json");
   const raw = fs.readFileSync(file, "utf8");
   const parsed = JSON.parse(raw) as Archive;
-  for (const item of [...parsed.signals, ...parsed.cases]) {
+  // signals 为 brief，不标 incomplete；cases 仅在没有正文块时才标 incomplete。
+  for (const item of parsed.signals) item.thin = false;
+  for (const item of parsed.cases) {
     if (typeof item.thin !== "boolean") item.thin = false;
-    if (!item.thin && (item.wordCount < 800 || !item.blocks || item.blocks.length === 0)) {
-      item.thin = true;
-    }
+    if (!item.thin && (!item.blocks || item.blocks.length === 0)) item.thin = true;
   }
   // 补全运行期派生所需但 archive.json 未必含的数组
   parsed.podcastShows = parsed.podcastShows ?? parsed.podcasts;

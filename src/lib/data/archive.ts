@@ -67,10 +67,13 @@ export function getArchive(): Archive {
     const file = path.join(process.cwd(), 'data', 'archive.json');
     const raw = fs.readFileSync(file, 'utf8');
     const parsed = JSON.parse(raw) as Archive;
-    // 诚实标注：正文不足 800 字或正文块为空 → 档案未完成（触发详情页提示，绝不编造内容补足）
-    for (const item of [...parsed.signals, ...parsed.cases]) {
+    // 诚实标注：只有正文块完全缺失才标记为 incomplete。
+    // signals 本质是 brief/快讯，不标 incomplete；cases 中轻量 campaign 短讯只要
+    // 有正文块即视为正常 brief，不再因字数<800而满屏「档案未完成」。
+    for (const item of parsed.signals) item.thin = false;
+    for (const item of parsed.cases) {
       if (typeof item.thin !== 'boolean') item.thin = false;
-      if (!item.thin && (item.wordCount < 800 || !item.blocks || item.blocks.length === 0)) {
+      if (!item.thin && (!item.blocks || item.blocks.length === 0)) {
         item.thin = true;
       }
     }
