@@ -70,28 +70,55 @@ npm run migrate:supabase
 
 ## 4. 自动采集（运行时更新）— 已实现
 
-采集管线 `pipeline/lib/ingest.ts` 在抓取 + AI 萃取后**直接 `upsert` 到 Supabase 的 `signals` / `cases` 表**（即网站读表），实现「抓到即更新」，不再写旧的 `articles` 表。
+三个采集器都**直接 `upsert` 到 Supabase 的 `signals` / `cases` 表**（即网站读的表），配合全站 ISR（`src/app/layout.tsx` 的 `revalidate = 300`），采集写库后**最多 5 分钟自动上线，不需要重新构建**。
 
-触发入口：`src/app/api/cron/ingest/route.ts`（Node runtime，`force-dynamic`）。
+| 采集器 | 导出函数 | 目标 | 覆盖 |
+| --- | --- | --- | --- |
+| `pipeline/ingest-web.ts` | `runWebIngest()` | `signals` | 注册表里 `rss` 可用且 `accessMode==="open"` 的源 |
+| `pipeline/ingest-sites.ts` | `runSitesIngest()` | `signals` | 无 RSS 的中文站列表页爬取（Morketing / 品牌星球 / TOPMarketing / 聚美丽 / 品观网） |
+| `pipeline/ingest-cases.ts` | `runCasesIngest()` | `cases` | 案例站（数英 / SocialBeta / 广告门 / 品牌星球 / 聚美丽） |
+| `pipeline/mark-live.ts` | `runMarkLive()` | `sources` | 把「库里确实有内容」的来源标记 `live:true` |
+
+本地单独跑：`npm run ingest:web` / `ingest:sites` / `ingest:cases` / `mark:live`。
+
+触发入口：`src/app/api/cron/ingest/route.ts`（Node runtime、`force-dynamic`、`maxDuration = 300`）。
 
 ### 4.1 Vercel Cron（生产，推荐）
-`vercel.json` 已配置（注意末尾斜杠，匹配 `trailingSlash: true` 的规范路径）：
+`vercel.json`（注意末尾斜杠，匹配 `trailingSlash: true` 的规范路径）：
 ```json
-{ "crons": [ { "path": "/api/cron/ingest/", "schedule": "0 6 * * *" } ] }
+{
+  "crons": [
+    { "path": "/api/cron/ingest/?job=all", "schedule": "0 6 * * *" },
+    { "path": "/api/cron/ingest/?job=web", "schedule": "0 14 * * *" }
+  ]
+}
 ```
-部署后 Vercel 每日 06:00（UTC）自动调用，自带 `x-vercel-cron: 1` 头，路由直接放行。
+Vercel Cron 调用自带 `x-vercel-cron: 1` 头，路由直接放行。
 
-### 4.2 手动 / 本地触发
+### 4.2 时间预算（Serverless 超时的关键）
+全量采集本地约 **4~5 分钟**，会超过 Serverless 函数时长上限（Hobby 60s / Pro 300s）。
+因此路由带**时间预算**：跑满就干净退出并在响应里如实上报 `truncated: true` 与剩余源数量；条目是逐条 upsert 的，中途停止**不会脏库**。
+
+- 预算默认 `240000` ms，可用环境变量 **`CRON_BUDGET_MS`** 覆盖 —— **Hobby 套餐请设为 `45000`**。
+- 未显式传 `offset` 时按「天」轮转分片起点，保证预算不足时不同日子从不同源开始，长期覆盖全部源。
+
+### 4.3 手动 / 本地触发
 ```bash
-# 带密钥（与 Vercel 环境变量 CRON_SECRET 一致）
-curl "https://<你的域名>/api/cron/ingest?secret=<CRON_SECRET>"
-# 或
-curl -H "Authorization: Bearer <CRON_SECRET>" "https://<你的域名>/api/cron/ingest"
+# 全量
+curl "https://<域名>/api/cron/ingest/?secret=<CRON_SECRET>"
+# 只跑 RSS，限 10 个源，预算 60 秒
+curl "https://<域名>/api/cron/ingest/?job=web&limit=10&budget=60000&secret=<CRON_SECRET>"
+# 只刷新来源 live 标记
+curl "https://<域名>/api/cron/ingest/?job=live&secret=<CRON_SECRET>"
 ```
-鉴权规则：未配 `CRON_SECRET` → 仅本地开发放行；带 `x-vercel-cron:1` → 放行；否则 `?secret=` 或 `Bearer` 必须与 `CRON_SECRET` 一致，否则返回 **401**。
+参数：`job = all | web | sites | cases | live`，`budget`（毫秒）、`offset`、`limit`。
+鉴权：未配 `CRON_SECRET` → 仅本地开发放行；带 `x-vercel-cron:1` → 放行；否则 `?secret=` 或 `Bearer` 必须匹配，不然 **401**。
 
-### 4.3 采集源
-遍历 `src/lib/data/sources.registry.ts` 中 `rss` 存在且 `accessMode==="open"` 的公开源；每源抽取 → 去重（`dedup_log`）→ AI 结构化 → 写 Supabase，运行审计记入 `ingestion_runs`。
+### 4.4 被墙 / 无 RSS 的源怎么处理
+- **`rsshub://<path>`**：注册表里可写伪协议，运行时展开为多个 RSSHub 镜像依次故障转移（`rsshub.rssforever.com` → `rsshub.ktachibana.party`）。36氪、虎嗅、华尔街见闻、第一财经、财新都走这条路。
+- **`accessMode: "restricted"`**：feed 已下线 / 被 WAF 拦截 / 本环境不可达的源，标记后自动跳过，不再浪费采集时间；来源页显示「受限 · 暂不可采集」。
+- feed 抓取一律走原生 `fetch` + `AbortController`（20s 强制中断）。**不要用 `rss-parser` 的 `parseURL`** —— 它的 `timeout` 对部分 WAF 主机不生效，会 TLS 握手挂死，拖垮整条流水线并产生假阴性。
+- XML 入库前经 `sanitizeXml()` 清洗裸 `&`、未定义实体与非法控制字符（爱范儿等源必需），CDATA 段内不动，避免污染正文。
 
 ---
 

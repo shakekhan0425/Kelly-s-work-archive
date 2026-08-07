@@ -1,0 +1,128 @@
+/**
+ * 多源 RSS/Atom 实时抓取（无 LLM，规则分类）—— 直接写 Supabase `signals`。
+ * 用 rss-parser 解析（兼容 RSS 2.0 / Atom / CDATA / 命名空间），比手写正则稳健。
+ * 页面运行时直读 Supabase，灌完立即在线上生效（无需重新构建）。
+ *
+ * 运行：tsx pipeline/ingest-web.ts
+ */
+import "./lib/env";
+import { createHash } from "node:crypto";
+import Parser from "rss-parser";
+import { extract } from "@extractus/article-extractor";
+import { SOURCE_REGISTRY } from "../src/lib/data/sources.registry";
+import type { ArchiveItem, SourceIntel } from "../src/lib/data/types";
+import {
+  sb, fetchText, stripTags, classify, wordCountZh, buildBlocks, slugify, draftKnowledge, hostOf, extractBody, meta,
+  feedCandidates, fetchFeedXml, slice, isCli,
+  type RunOpts, type RunReport,
+} from "./lib/ingest-shared";
+
+const parser = new Parser();
+const MAX_PER_FEED = 14;
+
+async function ingestRss(reg: SourceIntel): Promise<{ n: number; skip: number; err?: string; via?: string }> {
+  if (!reg.rss) return { n: 0, skip: 0 };
+  // 依次尝试候选（rsshub:// 会展开成多个镜像），任一成功即用
+  let xml: string | null = null;
+  let via = "";
+  for (const cand of feedCandidates(reg.rss)) {
+    xml = await fetchFeedXml(cand);
+    if (xml) { via = cand; break; }
+  }
+  if (!xml) return { n: 0, skip: 0, err: "feed 不可达或非 RSS/Atom" };
+  let feed;
+  try {
+    feed = await parser.parseString(xml);
+  } catch (e) {
+    return { n: 0, skip: 0, err: "解析失败 " + (e as Error).message };
+  }
+  const items = (feed.items || []).slice(0, MAX_PER_FEED);
+  let n = 0, skip = 0;
+  const lang = reg.lang === "zh" ? "zh" : "en";
+  for (const it of items) {
+    // 部分播客 feed（ART19 等）不带 <link>，退回 guid / enclosure 音频地址，否则整源被判为空。
+    const guid = typeof it.guid === "string" ? it.guid : "";
+    const url = (
+      it.link ||
+      (/^https?:\/\//.test(guid) ? guid : "") ||
+      it.enclosure?.url ||
+      ""
+    ).trim();
+    const title = (it.title || "").trim();
+    if (!title || !url) { skip++; continue; }
+    const id = "sig_" + createHash("sha256").update(url).digest("hex").slice(0, 20);
+    const { data: ex } = await sb().from("signals").select("id").eq("id", id).maybeSingle();
+    if (ex) { skip++; continue; }
+    let body = stripTags(it["content:encoded"] || it.content || it.summary || "");
+    let hero = "";
+    if (body.length < 300) {
+      try {
+        const art = await extract(url);
+        if (art?.text) body = art.text;
+        if (art?.image) hero = art.image;
+      } catch { /* ignore */ }
+      if (body.length < 300) {
+        try {
+          const h = await fetchText(url);
+          const b2 = extractBody(h);
+          if (b2.length > body.length) {
+            body = b2;
+            if (!hero) hero = meta(h, "og:image");
+          }
+        } catch { /* ignore */ }
+      }
+    }
+    const text = body || (it.summary ? stripTags(it.summary) : "") || "";
+    if (text.length < 150) { skip++; continue; }
+    const { signal_category, content_scope, topics } = classify(title, text);
+    const wc = wordCountZh(text);
+    const item: ArchiveItem = {
+      id, slug: slugify(title), title, url, summary: (it.summary ? stripTags(it.summary) : text.slice(0, 140)).slice(0, 280),
+      hero, byline: it.creator || "", publishedAt: it.isoDate || it.pubDate || new Date().toISOString(),
+      sourceId: reg.id, sourceName: reg.name, sourceSite: hostOf(url), lang,
+      category: reg.category, topics, brands: [], blocks: buildBlocks(text),
+      wordCount: wc, readMinutes: Math.max(1, Math.round(wc / 300)),
+      thin: wc < 800, knowledge: draftKnowledge(),
+    };
+    const { error } = await sb().from("signals").upsert({ id, data: item }, { onConflict: "id" });
+    if (error) { console.log(`    ✗ ${reg.id} 写库失败: ${error.message}`); skip++; }
+    else n++;
+  }
+  return { n, skip, via };
+}
+
+/** 候选源：有 rss 且未被标记 restricted / paywall / login；按 id 去重防止重复抓取。 */
+export function webFeeds(): SourceIntel[] {
+  const open = SOURCE_REGISTRY.filter((s) => s.rss && s.accessMode === "open");
+  return [...new Map(open.map((s) => [s.id, s])).values()];
+}
+
+export async function runWebIngest(opts: RunOpts = {}): Promise<RunReport> {
+  const t0 = Date.now();
+  const budget = opts.budgetMs ?? Number.POSITIVE_INFINITY;
+  const lines: string[] = [];
+  const log = (s: string) => { lines.push(s); (opts.log ?? console.log)(s); };
+
+  const all = webFeeds();
+  const feeds = slice(all, opts.offset ?? 0, opts.limit);
+  log(`[ingest-web] 待抓 RSS/Atom 源 ${feeds.length}/${all.length} 个`);
+
+  let added = 0, processed = 0, truncated = false;
+  for (const reg of feeds) {
+    if (Date.now() - t0 > budget) { truncated = true; log(`  ⏱ 达到时间预算，剩余 ${feeds.length - processed} 源留待下轮`); break; }
+    const r = await ingestRss(reg);
+    processed++;
+    if (r.err) log(`  ✗ ${reg.id}: 抓取失败 ${r.err}`);
+    else log(`  ✓ ${reg.id}: new=${r.n} skip=${r.skip}`);
+    added += r.n;
+    if (r.n > 0) {
+      try { await sb().from("sources").update({ is_active: true }).eq("id", reg.id); } catch { /* ignore */ }
+    }
+  }
+  log(`✅ RSS 抓取完成，新增 signals=${added}`);
+  return { added, processed, of: feeds.length, truncated, ms: Date.now() - t0, lines };
+}
+
+if (isCli("ingest-web")) {
+  runWebIngest().catch((e) => { console.error("失败：", e.message); process.exit(1); });
+}

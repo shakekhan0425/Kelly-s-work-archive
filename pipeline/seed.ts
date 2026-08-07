@@ -1,7 +1,7 @@
 /**
- * 初始化种子数据：把前端已有的真实注册表（94 来源 / 33 播客 / 51 公司）
+ * 初始化种子数据：把前端已有的真实注册表（来源 / 播客频道 / 公司档案）
  * 同步进 Supabase，作为采集流水线的「来源目录」与「公司档案」底座。
- * 不写入任何抓取内容（articles 由流水线采集填充）。
+ * 表结构为 jsonb（{id, data}），与 supabase/schema.sql 一致。
  *
  * 运行：npm run pipeline:seed   （需先配置 .env.local 中的 SUPABASE_*）
  */
@@ -11,87 +11,38 @@ import { SOURCE_REGISTRY } from "../src/lib/data/sources.registry";
 import { PODCAST_CHANNELS } from "../src/lib/data/podcasts.registry";
 import { COMPANY_REGISTRY } from "../src/lib/data/companies.registry";
 
-function authorityRank(a: string): number {
-  switch (a) {
-    case "S": return 5;
-    case "A": return 5;
-    case "B": return 4;
-    case "C": return 3;
-    default: return 3;
+/** 按 id 去重，保留 live:true 的版本（注册表存在 jiemian/ifanr/geekpark 重复定义） */
+function dedupeById<T extends { id: string; live?: boolean }>(rows: T[]): T[] {
+  const map = new Map<string, T>();
+  for (const r of rows) {
+    const prev = map.get(r.id);
+    if (!prev || (r.live && !prev.live)) map.set(r.id, r);
   }
-}
-function langOf(l: string): "zh" | "en" {
-  return l === "en" ? "en" : "zh";
-}
-function accessModeOf(t: string): string {
-  if (t === "RSS") return "rss";
-  if (t === "API") return "api";
-  return "web";
+  return [...map.values()];
 }
 
 async function main() {
   const sb = getSupabaseAdmin();
 
-  // 1) Sources
-  const sources = SOURCE_REGISTRY.map((s: any) => ({
-    id: s.id,
-    name: s.name,
-    category: s.category,
-    language: langOf(s.lang),
-    region: s.region ?? "CN",
-    authority: authorityRank(s.authority),
-    access_mode: accessModeOf(s.type),
-    homepage: s.url ?? null,
-    feed_url: s.rss ?? null,
-    newsletter: !!s.newsletter,
-    paywall: !!s.paywall,
-    why_follow: s.whyFollow ?? null,
-    last_success_at: s.lastSuccessAt ?? null,
-    is_active: !!s.live,
-  }));
+  // 1) Sources（jsonb：data = 完整 SourceIntel）
+  const sources = dedupeById(SOURCE_REGISTRY as any[]).map((s: any) => ({ id: s.id, data: s }));
   const { error: e1 } = await sb.from("sources").upsert(sources, { onConflict: "id" });
   if (e1) throw e1;
   console.log(`✓ sources seeded: ${sources.length}`);
 
-  // 2) Podcasts
-  const podcasts = PODCAST_CHANNELS.map((p: any) => ({
-    id: p.id,
-    name: p.name,
-    language: langOf(p.lang),
-    region: p.group === "International" ? "Global" : "CN",
-    rss_url: p.rss,
-    homepage: p.site ?? null,
-    description: p.desc ?? null,
-  }));
+  // 2) Podcasts（jsonb：data = 频道对象）
+  const podcasts = PODCAST_CHANNELS.map((p: any) => ({ id: p.id, data: p }));
   const { error: e2 } = await sb.from("podcasts").upsert(podcasts, { onConflict: "id" });
   if (e2) throw e2;
   console.log(`✓ podcasts seeded: ${podcasts.length}`);
 
-  // 3) Companies
-  const companies = COMPANY_REGISTRY.map((c: any) => ({
-    id: c.id,
-    name: c.name,
-    overview: c.overview ?? null,
-    timeline: c.timeline ?? [],
-    business_model: c.businessModel ?? null,
-    brand_portfolio: c.brandPortfolio ?? [],
-    revenue_logic: c.revenueLogic ?? null,
-    china_strategy: c.chinaStrategy ?? null,
-    consumers: c.consumers ?? null,
-    competitors: c.competitors ?? [],
-    recent_moves: c.recentMoves ?? [],
-    marketing_cases: c.marketingCases ?? [],
-    culture: c.culture ?? null,
-    target_roles: c.openRoles ?? [],
-    interview_qs: c.interviewQuestions ?? [],
-    my_fit: c.myFit ?? null,
-    sources: c.sources ?? [],
-  }));
-  const { error: e3 } = await sb.from("companies").upsert(companies, { onConflict: "id" });
+  // 3) Companies（jsonb：data = 完整 dossier）
+  const companies = COMPANY_REGISTRY.map((c: any) => ({ id: c.id, data: c }));
+  const { error: e3 } = await sb.from("company_registry").upsert(companies, { onConflict: "id" });
   if (e3) throw e3;
-  console.log(`✓ companies seeded: ${companies.length}`);
+  console.log(`✓ company_registry seeded: ${companies.length}`);
 
-  console.log("Seed 完成。下一步：配置 LLM 后运行 npm run pipeline:ingest");
+  console.log("Seed 完成。下一步：运行 npm run pipeline:ingest 抓取实时内容。");
 }
 
 main().catch((e) => {

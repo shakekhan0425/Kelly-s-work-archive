@@ -71,7 +71,8 @@ export interface SourceIntel {
   /** 覆盖区域：Global / China / US / EU / UK / Asia */
   region: string;
   /** 访问方式：open 公开 / newsletter 邮件订阅 / paywall 付费墙 / login 登录 */
-  accessMode: 'open' | 'newsletter' | 'paywall' | 'login';
+  /** restricted = 站点可访问但对本采集环境不可达（WAF/限流/无公开 feed），不进自动采集 */
+  accessMode: 'open' | 'newsletter' | 'paywall' | 'login' | 'restricted';
   /** 是否有邮件订阅（newsletter） */
   newsletter?: boolean;
   /** 是否付费墙（paywall） */

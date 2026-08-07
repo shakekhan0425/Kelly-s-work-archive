@@ -12,17 +12,23 @@
     "pipeline:ingest": "tsx pipeline/cli.ts ingest --all",
     "pipeline:export": "tsx pipeline/export-to-archive.ts",
     "pipeline:cron": "tsx pipeline/cli.ts cron",
-    "migrate:supabase": "tsx scripts/migrate-to-supabase.ts"
+    "migrate:supabase": "tsx scripts/migrate-to-supabase.ts",
+    "ingest:web": "tsx pipeline/ingest-web.ts",
+    "ingest:sites": "tsx pipeline/ingest-sites.ts",
+    "ingest:cases": "tsx pipeline/ingest-cases.ts",
+    "mark:live": "tsx pipeline/mark-live.ts"
   },
   "dependencies": {
+    "@extractus/article-extractor": "^7.3.1",
     "@supabase/ssr": "^0.12.4",
     "@supabase/supabase-js": "^2.112.0",
-    "@extractus/article-extractor": "^7.0.0",
+    "dotenv": "^16.4.5",
     "lucide-react": "^1.28.0",
     "next": "16.3.0",
     "openai": "^4.77.0",
     "react": "19.2.8",
-    "react-dom": "19.2.8"
+    "react-dom": "19.2.8",
+    "rss-parser": "^3.13.0"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
@@ -33,7 +39,6 @@
     "eslint-config-next": "16.3.0",
     "tailwindcss": "^4",
     "tsx": "^4.19.2",
-    "dotenv": "^16.4.5",
     "typescript": "^5"
   }
 }

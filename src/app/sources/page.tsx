@@ -29,6 +29,7 @@ function accessLabel(m: string): string {
   if (m === "newsletter") return "邮件订阅";
   if (m === "paywall") return "付费墙";
   if (m === "login") return "登录";
+  if (m === "restricted") return "受限 · 暂不可采集";
   return m;
 }
 

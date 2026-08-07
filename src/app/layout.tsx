@@ -4,6 +4,12 @@ import { PRODUCT } from "@/lib/config/product";
 import { PwaRegister } from "@/components/archive/PwaRegister";
 import { MobileTabBar } from "@/components/archive/MobileTabBar";
 
+/**
+ * 全站 ISR：页面在运行时直读 Supabase，采集写库后最多 5 分钟自动上线，
+ * 无需重新构建。子路由可单独覆盖（如 /favorites 已是 force-dynamic）。
+ */
+export const revalidate = 300;
+
 export const metadata: Metadata = {
   title: {
     default: `${PRODUCT.name} · ${PRODUCT.subtitle}`,
