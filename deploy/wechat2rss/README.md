@@ -11,7 +11,7 @@
 - Wechat2RSS 的**微信登录由你本人完成**：部署好后，打开它的网页管理端，用微信扫码登录。
   **Agent 不会、也不需要你的微信 Cookie / Session / 密码。**
 - 必须挂载**持久卷**：容器重启后，订阅列表和登录态不能丢（否则每天要重新扫码）。
-- 下方命令里的数据目录以官方镜像为准（通常 `/app/data`）。若官方改了路径，请把 volume 挂载点同步调整。
+- 当前官方镜像为 `tttmr/wechat2rss:latest`，端口为 `8080`，持久化目录为 `/wechat2rss`。
 
 ---
 
@@ -20,10 +20,10 @@
 ### A. Sealos（推荐，国内访问稳）
 
 1. 打开 Sealos 控制台 → **应用 / 容器** → 新建。
-2. 镜像填：`wangfenjin/wechat2rss:latest`
-3. 端口：容器端口 `8000`，对外暴露 `8000`。
-4. **存储卷**：添加持久卷，容器内路径填 `/app/data`（容量 1–5 GB 足够）。
-5. 环境变量：`PORT=8000`、`DATA_DIR=/app/data`（可选 `PASSWORD=你的强密码`）。
+2. 镜像填：`tttmr/wechat2rss:latest`
+3. 端口：容器端口 `8080`，对外暴露 `8080`。
+4. **存储卷**：添加持久卷，容器内路径填 `/wechat2rss`（容量 1–5 GB 足够）。
+5. 环境变量：`RSS_HTTPS=1`、`TZ=Asia/Shanghai`；私有部署按官方要求填写 `LIC_EMAIL` / `LIC_CODE`。
 6. 部署，等状态变「运行中」。
 
 > Sealos 也支持直接上传 `docker-compose.yml`（本目录已提供），在「Compose 应用」里导入即可，
@@ -33,8 +33,8 @@
 
 1. 新建 Project → 选 **Deploy from GitHub repo**，指向包含本目录的仓库；
    或直接 `railway up`（读取 `railway.toml` + `Dockerfile`）。
-2. 在 Railway Dashboard 给该服务**添加 Volume**：Mount Path = `/app/data`。
-3. 环境变量同上（`PORT` / `DATA_DIR`）。
+2. 在 Railway Dashboard 给该服务**添加 Volume**：Mount Path = `/wechat2rss`。
+3. 环境变量：`RSS_HTTPS=1`、`TZ=Asia/Shanghai`；如需绑定固定 RSS 地址，增加 `RSS_HOST`。
 4. 部署完成后，Railway 会给你一个 `*.railway.app` 域名。
 
 ---
@@ -45,7 +45,7 @@
 |---|---|---|
 | **Wechat2RSS Admin URL** | 平台给你的域名（Sealos/ Railway 分配的） | 能打开网页管理端 |
 | **Health Status** | `curl https://<你的域名>/` 返回 `200` | 健康 |
-| **Version** | 镜像标签 `latest` 或管理端页脚 | 记下版本号 |
+| **Version** | 访问 `/version` 或管理端页脚 | 记下版本号 |
 | **Persistent Storage** | 重启容器后，订阅与登录态仍在 | 数据目录落在持久卷 |
 
 ---
@@ -58,10 +58,10 @@
    - 按**公众号 ID**（如 `wx1234567890abcdef`）；
    - 按**文章链接**粘贴一篇该公众号的文章 URL，Wechat2RSS 会自动识别账号。
 4. 订阅完成后，Wechat2RSS 会为每个账号生成 RSS：
-   - 单账号：`https://<你的域名>/rss/<biz_id>`
-   - 聚合时间线（推荐）：`https://<你的域名>/timeline`（或 `/rss/all`，以官方为准）
+   - 单账号：`https://<你的域名>/feed/<biz_id>.xml`
+   - 聚合：`https://<你的域名>/feed/all.xml?k=<RSS_TOKEN>`
 
-> 把聚合时间线 URL 或各账号 RSS 填进 Supabase 的 `wechat_sources.feed_url`（见下方「Supabase 配置」）。
+> Edge Function 会通过 `/list?k=<RSS_TOKEN>` 自动读取已订阅账号，并保存每个账号的 RSS 地址；不需要手动逐条填写 `wechat_sources.feed_url`。
 
 ---
 
@@ -72,6 +72,7 @@
 | Key | 值 |
 |---|---|
 | `WECHAT2RSS_BASE_URL` | `https://<你的域名>`（不要结尾斜杠） |
+| `WECHAT2RSS_TOKEN` | Wechat2RSS 的 `RSS_TOKEN`，用于读取订阅列表 |
 | `CRON_SECRET` | `<你的 CRON_SECRET>`（与 0004_cron.sql 中的值保持一致；请自行生成强随机值） |
 | `SUPABASE_URL` | `https://xecllrzcdalpxbxekunm.supabase.co` |
 | `SUPABASE_SERVICE_ROLE_KEY` | `<你的 SERVICE_ROLE_KEY>`（Supabase Dashboard → Settings → API 复制；**切勿提交到仓库**） |
@@ -82,7 +83,7 @@
 > ⚠️ 安全：上表值均为**占位符**，请到 Supabase Dashboard 的 Secrets 里填你自己的真实值。
 > 仓库只放变量名、不放密钥明文。若任何密钥此前已泄露，请立即在 Supabase / DeepSeek 后台轮换。
 
-并在 `wechat_sources` 表为每个账号填 `feed_url`（或只填 `wechat_biz_id`，Edge Function 会自动拼 `/rss/<biz>`）。
+扫码并订阅后，Edge Function 会自动把账号 ID、名称和 `/feed/<id>.xml` 写入 `wechat_sources`。
 
 ---
 
