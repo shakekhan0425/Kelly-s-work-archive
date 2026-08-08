@@ -1,0 +1,53 @@
+name: Ingest (Supabase)
+
+on:
+  schedule:
+    - cron: "0 */6 * * *"
+  workflow_dispatch: {}
+
+concurrency:
+  group: ingest
+  cancel-in-progress: false
+
+jobs:
+  ingest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Ingest RSS/Atom (web)
+        run: npm run ingest:web
+        timeout-minutes: 16
+        continue-on-error: true
+        env:
+          INGEST_BUDGET_MS: 900000
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      - name: Ingest Chinese marketing sites
+        run: npm run ingest:sites
+        timeout-minutes: 9
+        continue-on-error: true
+        env:
+          INGEST_BUDGET_MS: 480000
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      - name: Ingest Chinese case sites
+        run: npm run ingest:cases
+        timeout-minutes: 9
+        continue-on-error: true
+        env:
+          INGEST_BUDGET_MS: 480000
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      - name: Mark live sources
+        run: npm run mark:live
+        timeout-minutes: 3
+        continue-on-error: true
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}

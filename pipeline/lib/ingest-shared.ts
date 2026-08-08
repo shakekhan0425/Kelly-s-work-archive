@@ -12,6 +12,19 @@ export function sb() {
     auth: { persistSession: false },
   });
 }
+
+/** 给任意 Promise 套一个硬超时。用于包裹不响应 AbortController 的库（如 article-extractor）。 */
+export function withTimeout<T>(promise: Promise<T>, ms: number, label = "operation"): Promise<T | null> {
+  const t = new Promise<null>((resolve) => setTimeout(() => resolve(null), ms));
+  return Promise.race([promise, t]).then((r) => {
+    if (r === null) {
+      if (process.env.DEBUG) console.log(`  ⏱ ${label} 超时（>${ms}ms）`);
+      return null;
+    }
+    return r;
+  });
+}
+
 export function regById(id: string): SourceIntel | undefined {
   return SOURCE_REGISTRY.find((s) => s.id === id);
 }

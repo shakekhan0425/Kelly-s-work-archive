@@ -118,5 +118,6 @@ export async function runCasesIngest(opts: RunOpts = {}): Promise<RunReport> {
 }
 
 if (isCli("ingest-cases")) {
-  runCasesIngest().catch((e) => { console.error("失败：", e.message); process.exit(1); });
+  const budgetMs = Number(process.env.INGEST_BUDGET_MS) || 480_000; // 默认 8 分钟
+  runCasesIngest({ budgetMs }).catch((e) => { console.error("失败：", e.message); process.exit(1); });
 }

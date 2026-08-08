@@ -12,7 +12,7 @@ import { SOURCE_REGISTRY } from "../src/lib/data/sources.registry";
 import type { ArchiveItem, SourceIntel } from "../src/lib/data/types";
 import {
   sb, fetchText, stripTags, classify, wordCountZh, buildBlocks, slugify, draftKnowledge, hostOf, extractBody, meta,
-  feedCandidates, fetchFeedXml, slice, isCli,
+  feedCandidates, fetchFeedXml, slice, isCli, withTimeout,
   type RunOpts, type RunReport,
 } from "./lib/ingest-shared";
 
@@ -112,18 +112,19 @@ async function ingestRss(reg: SourceIntel): Promise<{ n: number; skip: number; e
     let body = stripTags(it["content:encoded"] || it.content || it.summary || "");
     let hero = "";
     if (body.length < 300) {
+      // article-extractor 内部 fetch 不响应 AbortController，必须套硬超时防止挂死
       try {
-        const art = await extract(url);
+        const art = await withTimeout(extract(url), 12_000, "article-extract");
         if (art?.text) body = art.text;
         if (art?.image) hero = art.image;
       } catch { /* ignore */ }
       if (body.length < 300) {
         try {
-          const h = await fetchText(url);
-          const b2 = extractBody(h);
+          const h = await withTimeout(fetchText(url), 12_000, "fetch-detail");
+          const b2 = extractBody(h ?? "");
           if (b2.length > body.length) {
             body = b2;
-            if (!hero) hero = meta(h, "og:image");
+            if (!hero) hero = meta(h ?? "", "og:image");
           }
         } catch { /* ignore */ }
       }
@@ -180,5 +181,6 @@ export async function runWebIngest(opts: RunOpts = {}): Promise<RunReport> {
 }
 
 if (isCli("ingest-web")) {
-  runWebIngest().catch((e) => { console.error("失败：", e.message); process.exit(1); });
+  const budgetMs = Number(process.env.INGEST_BUDGET_MS) || 900_000; // 默认 15 分钟
+  runWebIngest({ budgetMs }).catch((e) => { console.error("失败：", e.message); process.exit(1); });
 }
