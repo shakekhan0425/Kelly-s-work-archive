@@ -1,5 +1,5 @@
 // Edge Function: ingest-wechat
-// 读取 Wechat2RSS 的 RSS（按 wechat_sources.feed_url，或 BASE_URL/rss/<biz>），
+// 读取 Wechat2RSS 的 RSS（按订阅列表返回的 feed_url，或 BASE_URL/feed/<biz>.xml），
 // canonicalize → dedupe（幂等 upsert）→ 写 wechat_articles / 更新 wechat_sources / 写 sync_jobs。
 //
 // 鉴权：public 函数 + x-cron-secret 头（或 ?secret= 查询参数），由 Supabase Cron 调用。
@@ -14,6 +14,7 @@ import {
 } from "../_shared/canon.ts";
 
 const CRON_SECRET = Deno.env.get("CRON_SECRET") ?? "";
+const WECHAT2RSS_TOKEN = Deno.env.get("WECHAT2RSS_TOKEN") ?? "";
 
 function authorized(req: Request): boolean {
   if (req.headers.get("x-cron-secret") === CRON_SECRET && CRON_SECRET) return true;
@@ -22,9 +23,46 @@ function authorized(req: Request): boolean {
   return false;
 }
 
+async function syncSubscriptions(supabase: any, base: string) {
+  if (!WECHAT2RSS_TOKEN) return;
+
+  const url = new URL("/list", `${base}/`).toString();
+  const u = new URL(url);
+  u.searchParams.set("k", WECHAT2RSS_TOKEN);
+  const res = await fetch(u.toString(), { headers: { "User-Agent": "KellyArchiveBot/1.0" } });
+  if (!res.ok) throw new Error(`Wechat2RSS /list HTTP ${res.status}`);
+  const payload = await res.json();
+  if (payload?.err) throw new Error(`Wechat2RSS /list: ${payload.err}`);
+
+  const subscriptions = Array.isArray(payload?.data) ? payload.data : [];
+  const { data: existing, error } = await supabase.from("wechat_sources").select("id,name,wechat_biz_id");
+  if (error) throw error;
+
+  for (const sub of subscriptions) {
+    const bizId = String(sub?.id || "").trim();
+    const name = String(sub?.name || "微信公众号").trim();
+    if (!bizId) continue;
+    const match = (existing || []).find((s: any) =>
+      s.wechat_biz_id === bizId || String(s.name || "").trim() === name,
+    );
+    const feedUrl = String(sub?.link || `${base}/feed/${encodeURIComponent(bizId)}.xml`);
+    const row = {
+      id: match?.id || `wx-${bizId}`,
+      name,
+      wechat_biz_id: bizId,
+      feed_url: feedUrl,
+      status: "connected",
+      error_message: null,
+    };
+    await supabase.from("wechat_sources").upsert(row, { onConflict: "id" });
+  }
+}
+
 async function run(supabase: any) {
   const base = (Deno.env.get("WECHAT2RSS_BASE_URL") || "").replace(/\/$/, "");
   if (!base) throw new Error("WECHAT2RSS_BASE_URL 未配置");
+
+  await syncSubscriptions(supabase, base);
 
   const { data: sources, error } = await supabase
     .from("wechat_sources")
@@ -43,7 +81,10 @@ async function run(supabase: any) {
     let updated = 0;
 
     try {
-      const feedUrl = src.feed_url || `${base}/rss/${src.wechat_biz_id}`;
+      const feedUrl = src.feed_url || (src.wechat_biz_id
+        ? `${base}/feed/${encodeURIComponent(src.wechat_biz_id)}.xml`
+        : "");
+      if (!feedUrl) throw new Error("未发现 Wechat2RSS 订阅地址，请先扫码并订阅公众号");
       const xml = await fetchRss(feedUrl);
       const { items } = parseRss(xml);
       found = items.length;
@@ -120,7 +161,7 @@ async function run(supabase: any) {
     } catch (e: any) {
       status = "failed";
       errMsg = String(e?.message || e);
-      const reason = errMsg.includes("401") || errMsg.includes("403") || errMsg.includes("未登录")
+      const reason = errMsg.includes("401") || errMsg.includes("403") || errMsg.includes("未登录") || errMsg.includes("未发现")
         ? "auth_required"
         : errMsg.includes("429")
           ? "rate_limited"
