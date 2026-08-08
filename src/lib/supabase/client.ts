@@ -1,4 +1,5 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import { PUBLIC_SUPABASE_URL } from "./config";
 
 /**
  * 浏览器端 Supabase 客户端（懒加载，仅客户端可用）。
@@ -12,12 +13,11 @@ export function getBrowserSupabase(): SupabaseClient | null {
   if (typeof window === "undefined") return null;
   if (_client) return _client;
   if (_tried) return null;
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  if (!url || !anon) {
+  if (!PUBLIC_SUPABASE_URL || !anon) {
     _tried = true;
     return null;
   }
-  _client = createClient(url, anon, { auth: { persistSession: false } });
+  _client = createClient(PUBLIC_SUPABASE_URL, anon, { auth: { persistSession: false } });
   return _client;
 }

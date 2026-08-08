@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
+import { PUBLIC_SUPABASE_URL } from "./config";
 
 /**
  * Server-side Supabase client (used in Server Components and Server Actions).
@@ -7,12 +8,11 @@ import { cookies } from "next/headers";
  * no-backend (demo) path.
  */
 export async function getServerSupabase() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  if (!url || !anon) return null;
+  if (!PUBLIC_SUPABASE_URL || !anon) return null;
 
   const cookieStore = await cookies();
-  return createServerClient(url, anon, {
+  return createServerClient(PUBLIC_SUPABASE_URL, anon, {
     cookies: {
       getAll() {
         return cookieStore.getAll();

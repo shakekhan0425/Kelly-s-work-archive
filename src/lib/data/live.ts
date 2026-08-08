@@ -1,6 +1,7 @@
 import "server-only";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { getLocalArchive } from "@archive-data";
+import { PUBLIC_SUPABASE_URL } from "@/lib/supabase/config";
 import { SOURCE_REGISTRY } from "./sources.registry";
 import { COMPANY_REGISTRY } from "./companies.registry";
 import { PODCAST_CHANNELS } from "./podcasts.registry";
@@ -64,17 +65,18 @@ import {
 export const PAGE_SIZE = 24;
 
 let cache: Archive | null = null;
+let cacheAt = 0;
 let source: "supabase" | "json" | null = null;
+const CACHE_TTL_MS = 5 * 60 * 1000;
 
 function jsonArchive(): Archive {
   return getLocalArchive();
 }
 
 function sb(): SupabaseClient | null {
-  const url = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  if (!url || !key) return null;
-  return createClient(url, key, { auth: { persistSession: false } });
+  if (!PUBLIC_SUPABASE_URL || !key) return null;
+  return createClient(PUBLIC_SUPABASE_URL, key, { auth: { persistSession: false } });
 }
 
 async function supabaseArchive(client: SupabaseClient): Promise<Archive> {
@@ -177,11 +179,12 @@ export const liveOverrides: {
 
 /** 统一入口：返回当前数据源的 Archive（缓存于模块生命周期） */
 export async function getArchiveLive(): Promise<Archive> {
-  if (cache) return cache;
+  if (cache && Date.now() - cacheAt < CACHE_TTL_MS) return cache;
   const client = sb();
   if (client) {
     try {
       cache = await supabaseArchive(client);
+      cacheAt = Date.now();
       source = "supabase";
       return cache;
     } catch (e) {
@@ -189,6 +192,7 @@ export async function getArchiveLive(): Promise<Archive> {
     }
   }
   cache = jsonArchive();
+  cacheAt = Date.now();
   source = "json";
   return cache;
 }

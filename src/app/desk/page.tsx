@@ -17,14 +17,19 @@ const HERO_IMAGES = [
   "https://images.unsplash.com/photo-1555992336-fb0d29498b13?w=1600&q=80", // Lisbon tiles
   "https://images.unsplash.com/photo-1516483638261-f4dbaf036963?w=1600&q=80", // Cinque Terre
 ];
+const DISPLAY_TIME_ZONE = "Asia/Shanghai";
 
 function heroImage() {
-  const day = new Date().getDate();
+  const day = Number(new Intl.DateTimeFormat("en-US", {
+    timeZone: DISPLAY_TIME_ZONE,
+    day: "numeric",
+  }).format(new Date()));
   return HERO_IMAGES[day % HERO_IMAGES.length];
 }
 
 export default async function DeskPage() {
   const todayLong = new Intl.DateTimeFormat("zh-CN", {
+    timeZone: DISPLAY_TIME_ZONE,
     year: "numeric",
     month: "long",
     day: "numeric",
@@ -32,6 +37,7 @@ export default async function DeskPage() {
   }).format(new Date());
 
   const todayShort = new Intl.DateTimeFormat("zh-CN", {
+    timeZone: DISPLAY_TIME_ZONE,
     month: "long",
     day: "numeric",
   }).format(new Date());

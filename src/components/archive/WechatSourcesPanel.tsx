@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { createClient } from "@supabase/supabase-js";
+import { PUBLIC_SUPABASE_URL } from "@/lib/supabase/config";
 
-const URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
 type WxSource = {
@@ -73,12 +73,12 @@ export function WechatSourcesPanel() {
   const [err, setErr] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!URL || !ANON) {
+    if (!PUBLIC_SUPABASE_URL || !ANON) {
       setErr("Supabase 客户端环境变量未配置（NEXT_PUBLIC_SUPABASE_URL / ANON_KEY）");
       setLoading(false);
       return;
     }
-    const sb = createClient(URL, ANON, { auth: { persistSession: false } });
+    const sb = createClient(PUBLIC_SUPABASE_URL, ANON, { auth: { persistSession: false } });
     (async () => {
       try {
         const [sRes, hRes, jRes] = await Promise.all([
