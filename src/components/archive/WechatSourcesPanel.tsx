@@ -82,10 +82,10 @@ export function WechatSourcesPanel() {
     (async () => {
       try {
         const [sRes, hRes, jRes] = await Promise.all([
-          sb.from("wechat_sources").select("*").order("name"),
+          sb.from("wechat_sources_public").select("*").order("name"),
           sb.from("wechat_health").select("*").single(),
           sb
-            .from("sync_jobs")
+            .from("sync_jobs_public")
             .select("*")
             .order("created_at", { ascending: false })
             .limit(12),
