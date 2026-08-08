@@ -1,4 +1,5 @@
 import { ArchiveShell } from "@/components/archive/ArchiveShell";
+import { WechatSourcesPanel } from "@/components/archive/WechatSourcesPanel";
 import { getSourceGroups, getSourceIntel, liveSource } from "@/lib/data/live";
 import type { SourceGroup, SourceIntel } from "@/lib/data/types";
 
@@ -106,6 +107,8 @@ export default async function SourcesPage() {
           );
         })}
       </div>
+
+      <WechatSourcesPanel />
     </ArchiveShell>
   );
 }

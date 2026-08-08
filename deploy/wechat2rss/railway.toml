@@ -1,0 +1,19 @@
+# Railway 部署配置（Wechat2RSS）
+# 用法：把本目录推到 GitHub 后，Railway 选 "Deploy from GitHub repo"，
+# 或在项目根执行 `railway up`。Railway 会自动读取此文件构建并运行。
+#
+# 持久化：Railway 的 Volume 需在 Dashboard 里为该服务添加（Mount Path = /app/data），
+# 否则容器重启会丢失订阅与登录态。
+
+[build]
+dockerfile = "Dockerfile"
+
+[deploy]
+restartPolicyType = "ON_FAILURE"
+healthcheckPath = "/"
+healthcheckTimeout = 100
+端口由 Dockerfile EXPOSE 决定（8000）。
+
+[variables]
+PORT = "8000"
+DATA_DIR = "/app/data"
