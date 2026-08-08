@@ -2,7 +2,7 @@ import Link from "next/link";
 import { ArchiveShell } from "@/components/archive/ArchiveShell";
 import { SectionHeader } from "@/components/archive/SectionHeader";
 import { getPodcastChannelsLive, getPodcastEpisodesLive, formatDate, liveSource } from "@/lib/data/live";
-import type { PodcastChannelWithHealth } from "@/lib/data/types";
+import type { PodcastChannelWithHealth, PodcastEpisode } from "@/lib/data/types";
 
 export const metadata = { title: "Podcast Intelligence · WORK / Archive" };
 
@@ -19,8 +19,7 @@ function ChannelCover({ name, id }: { name: string; id: string }) {
   );
 }
 
-async function ChannelCard({ ch }: { ch: PodcastChannelWithHealth }) {
-  const eps = (await getPodcastEpisodesLive(ch.id)).slice(0, 3);
+function ChannelCard({ ch, eps }: { ch: PodcastChannelWithHealth; eps: PodcastEpisode[] }) {
   return (
     <article className="podch-card">
       <Link href={`/podcasts/channel/${ch.id}`} className="podch-head" style={{ textDecoration: "none", color: "inherit" }}>
@@ -60,6 +59,7 @@ async function ChannelCard({ ch }: { ch: PodcastChannelWithHealth }) {
 
 export default async function PodcastsPage() {
   const channels = await getPodcastChannelsLive();
+  const episodes = await getPodcastEpisodesLive();
   const zh = channels.filter((c) => c.group === "Chinese");
   const en = channels.filter((c) => c.group === "International");
   const liveCount = channels.filter((c) => c.health.ok).length;
@@ -75,7 +75,7 @@ export default async function PodcastsPage() {
           action={{ href: "/desk", label: "返回今日" }}
         />
         <p className="list-dek" style={{ maxWidth: "74ch" }}>
-          真实播客单集（构建时从各节目官方 RSS 抓取，共 {liveCount} 个频道已接入、{(await getPodcastEpisodesLive()).length}{" "}
+          真实播客单集（构建时从各节目官方 RSS 抓取，共 {liveCount} 个频道已接入、{episodes.length}{" "}
           期真实单集）。每条含真实摘要与播放链接，可用于商业洞察与英文表达积累。未接入频道仅显示目录，不生成占位单集。
         </p>
         {src === "supabase" ? (
@@ -94,14 +94,14 @@ export default async function PodcastsPage() {
       <SectionHeader eyebrow="Chinese" title="中文商业播客" />
       <div className="podch-grid" style={{ marginTop: 12 }}>
         {zh.map((c) => (
-          <ChannelCard key={c.id} ch={c} />
+          <ChannelCard key={c.id} ch={c} eps={episodes.filter((e) => e.channelId === c.id).slice(0, 3)} />
         ))}
       </div>
 
       <SectionHeader eyebrow="International" title="国际商业播客" />
       <div className="podch-grid" style={{ marginTop: 12 }}>
         {en.map((c) => (
-          <ChannelCard key={c.id} ch={c} />
+          <ChannelCard key={c.id} ch={c} eps={episodes.filter((e) => e.channelId === c.id).slice(0, 3)} />
         ))}
       </div>
     </ArchiveShell>

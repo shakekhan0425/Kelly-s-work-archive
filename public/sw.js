@@ -1,12 +1,12 @@
 /* WORK / Archive Service Worker
    策略：
    - 安装期预缓存「应用壳」+ 离线兜底页 + 图标
-   - 导航请求：stale-while-revalidate（先给缓存，后台刷新，减少切换卡顿）
+   - 导航请求：network-first（优先拿最新页面，网络失败时使用缓存）
    - 同源静态资源：stale-while-revalidate
    - 收藏页（?saved=1 / /favorites）：额外缓存正文，支持离线阅读
    - 跨域（字体/图片）：passthrough，缓存字体以提升二次加载
 */
-const VERSION = "wa-v3";
+const VERSION = "wa-v4";
 const SHELL = [
   "/",
   "/desk",
@@ -78,19 +78,17 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // 导航：stale-while-revalidate（先给缓存，后台刷新）
+  // 导航：优先请求最新页面，离线时再回退到缓存
   if (req.mode === "navigate") {
     event.respondWith(
-      caches.match(req).then((cached) => {
-        const network = fetch(req)
-          .then((res) => {
-            const copy = res.clone();
-            caches.open(VERSION).then((c) => c.put(req, copy));
-            return res;
-          })
-          .catch(() => cached || caches.match("/offline"));
-        return cached || network;
-      })
+      fetch(req)
+        .then((res) => {
+          if (!res.ok) throw new Error(`Navigation failed: ${res.status}`);
+          const copy = res.clone();
+          caches.open(VERSION).then((c) => c.put(req, copy));
+          return res;
+        })
+        .catch(async () => (await caches.match(req)) || caches.match("/offline"))
     );
     return;
   }
