@@ -27,9 +27,13 @@ create table if not exists public.wechat_sources (
   latest_article_at     timestamptz,
   articles_imported     integer not null default 0,
   error_message         text,
+  notes                 text,
   created_at            timestamptz not null default now(),
   updated_at            timestamptz not null default now()
 );
+
+alter table public.wechat_sources
+  add column if not exists notes text;
 
 create index if not exists idx_wechat_sources_status on public.wechat_sources(status);
 
@@ -104,6 +108,18 @@ create or replace view public.wechat_health as
     (select count(*)               from public.wechat_articles where status <> 'published')               as articles_processing,
     (select max(published_at)      from public.wechat_articles)                                           as latest_article_at;
 
+-- 前端只读取脱敏后的状态字段，不直接开放微信表。
+create or replace view public.wechat_sources_public as
+  select id, name, status, last_checked, last_successful_sync,
+         latest_article_at, articles_imported,
+         left(error_message, 100) as error_message
+  from public.wechat_sources;
+
+create or replace view public.sync_jobs_public as
+  select id, source_id, job_type, started_at, finished_at, status,
+         items_found, items_inserted, items_updated
+  from public.sync_jobs;
+
 -- ------------------------------------------------------------
 -- 6) 触发器：updated_at 自动维护
 -- ------------------------------------------------------------
@@ -111,7 +127,7 @@ create or replace function public.wechat_touch_updated() returns trigger as $$
 begin
   new.updated_at = now();
   return new;
-end; $$ language plpgsql;
+end; $$ language plpgsql set search_path = public;
 
 drop trigger if exists trg_wechat_sources_updated on public.wechat_sources;
 create trigger trg_wechat_sources_updated before update on public.wechat_sources
@@ -130,21 +146,12 @@ alter table public.wechat_sources   enable row level security;
 alter table public.wechat_articles  enable row level security;
 alter table public.sync_jobs        enable row level security;
 
-drop policy if exists "anon read wechat_sources"   on public.wechat_sources;
-create policy "anon read wechat_sources" on public.wechat_sources
-  for select using (true);
-
 drop policy if exists "anon read published wechat" on public.wechat_articles;
 create policy "anon read published wechat" on public.wechat_articles
   for select using (status = 'published');
 
-drop policy if exists "anon read sync_jobs" on public.sync_jobs;
-create policy "anon read sync_jobs" on public.sync_jobs
-  for select using (true);
-
-drop policy if exists "anon read wechat_health" on public.wechat_health;
-create policy "anon read wechat_health" on public.wechat_health
-  for select using (true);
+grant select on public.wechat_health, public.wechat_sources_public,
+  public.sync_jobs_public to anon, authenticated;
 
 -- ------------------------------------------------------------
 -- 8) Seed：目标公众号（营销 / 美妆 / 奢侈 高相关度）
