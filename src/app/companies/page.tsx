@@ -4,7 +4,6 @@ import { CompaniesExplorer } from "@/components/archive/CompaniesExplorer";
 import { getCompanyDossiersLive, getCompanyGroups, liveSource } from "@/lib/data/live";
 import type { CompanyCategory } from "@/lib/data/types";
 
-export const runtime = "edge";
 export const metadata = { title: "公司研究 · WORK / Archive" };
 
 export default async function CompaniesPage({

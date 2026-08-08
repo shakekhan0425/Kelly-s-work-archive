@@ -6,6 +6,7 @@
 - 数据源 **Supabase 优先**，未配置时**回退本地 `data/archive.json`**，保证本地可构建可运行；
 - 列表页（信号 / 案例）已分页，详情页按 `id` 运行时读取；
 - 支持 **PWA**：可「添加到主屏幕」、离线访问已读页面。
+- 同一份 GitHub 代码可同时部署到 **Vercel** 与 **Cloudflare Workers**，共用同一个 Supabase。
 
 ---
 
@@ -66,6 +67,22 @@ npm run migrate:supabase
 > 注：本工程去掉了 `output: "export"`，因此**不再兼容仅托管静态文件的 Netlify Drop**。
 > 若仍需静态托管，请保留 `next.config.ts` 中 `output: "export"`（但会失去运行时自动更新）。
 
+### 3.1 部署到 Cloudflare Workers（OpenNext）
+
+Cloudflare 使用官方 Next.js Workers 方案：`@opennextjs/cloudflare` + Wrangler，不使用 Pages 静态部署。
+
+```bash
+npm install
+npm run preview   # 本地 Cloudflare Workers Runtime 预览
+npm run deploy    # 发布到 workers.dev 或已配置的 Cloudflare Route
+```
+
+- Cloudflare 与 Vercel 继续读取同一个 Supabase，不创建第二个数据库；
+- `NEXT_PUBLIC_SUPABASE_URL` 配置在 `wrangler.jsonc`，`NEXT_PUBLIC_SUPABASE_ANON_KEY` 作为 Worker Secret；
+- `SUPABASE_SERVICE_ROLE_KEY` 只留在 GitHub Actions / Vercel 服务端，不上传到 Worker；
+- `CF_WORKERS_BUILD=1` 只在 Cloudflare 构建时排除本地 JSON 回退，运行时以 Supabase 为主，避免超过 Workers 免费脚本体积限制；
+- `workers.dev` 需要先在 Cloudflare 账号启用。账号若拒绝注册 `workers.dev` 子域，Worker 版本仍可上传，但不会生成公开生产 URL。
+
 ---
 
 ## 4. 自动采集（运行时更新）— 已实现
@@ -83,17 +100,11 @@ npm run migrate:supabase
 
 触发入口：`src/app/api/cron/ingest/route.ts`（Node runtime、`force-dynamic`、`maxDuration = 300`）。
 
-### 4.1 Vercel Cron（生产，推荐）
-`vercel.json`（注意末尾斜杠，匹配 `trailingSlash: true` 的规范路径）：
-```json
-{
-  "crons": [
-    { "path": "/api/cron/ingest/?job=all", "schedule": "0 6 * * *" },
-    { "path": "/api/cron/ingest/?job=web", "schedule": "0 14 * * *" }
-  ]
-}
-```
-Vercel Cron 调用自带 `x-vercel-cron: 1` 头，路由直接放行。
+### 4.1 当前定时采集方式
+
+当前仓库的 `vercel.json` 没有启用 Vercel Cron（`crons: []`），`/api/cron/ingest` 仅保留兼容入口；正式采集由 `.github/workflows/ingest.yml` 每 6 小时执行，直接写入现有 Supabase。
+
+因此 Cloudflare 不需要、也不会复制一套采集数据库。若以后重新启用 Vercel Cron，需要把该路由恢复为实际 Node 采集逻辑，并重新评估 Vercel/Workers 的运行时兼容性。
 
 ### 4.2 时间预算（Serverless 超时的关键）
 全量采集本地约 **4~5 分钟**，会超过 Serverless 函数时长上限（Hobby 60s / Pro 300s）。

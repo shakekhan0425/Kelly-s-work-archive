@@ -21,6 +21,7 @@
     ],
     "paths": {
       "@/*": ["./src/*"],
+      "@archive-data": ["./src/lib/data/local-archive-full.ts"],
       "@pipeline/*": ["./pipeline/*"]
     }
   },

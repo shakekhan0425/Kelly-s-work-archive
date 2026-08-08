@@ -7,7 +7,6 @@ import {
 import { getSignalsLive, getCasesLive, getVerticalsLive, liveSource } from "@/lib/data/live";
 import { verticalOf } from "@/lib/data/archive";
 
-export const runtime = "edge";
 export const metadata = { title: "视觉素材库 · WORK / Archive" };
 
 export default async function VisualsPage({

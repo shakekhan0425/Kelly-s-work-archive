@@ -19,10 +19,10 @@ import type {
   SourceRef,
   CaseStudy,
 } from './types';
+import { getLocalArchive } from '@archive-data';
 import { SOURCE_REGISTRY } from './sources.registry';
 import { COMPANY_REGISTRY } from './companies.registry';
 import { PODCAST_CHANNELS } from './podcasts.registry';
-import archiveData from '../../../data/archive.json';
 import episodesData from './podcasts.episodes.json';
 import caseStudiesData from './case-studies.json';
 
@@ -35,49 +35,12 @@ const PODCAST_CHANNELS_HEALTH: PodcastChannelWithHealth[] = (
 /** Tier A 案例深度富化层（策划/LLM 复核，独立于抓取产物） */
 export const CASE_STUDIES: CaseStudy[] = (caseStudiesData as { cases: CaseStudy[] }).cases;
 
-const EMPTY: Archive = {
-  generatedAt: '',
-  stats: {
-    signals: 0,
-    cases: 0,
-    podcasts: 0,
-    english: 0,
-    companies: 0,
-    sources: 0,
-    withBody: 0,
-    withHero: 0,
-  },
-  signals: [],
-  cases: [],
-  podcasts: [],
-  podcastShows: [],
-  english: [],
-  topics: [],
-  companies: [],
-  sources: [],
-};
-
 let cache: Archive | null = null;
 
 /** 读取抓取管道产物。缺失时返回空档案（页面会显示编辑感空状态）。 */
 export function getArchive(): Archive {
   if (cache) return cache;
-  try {
-    const parsed = archiveData as Archive;
-    // 诚实标注：只有正文块完全缺失才标记为 incomplete。
-    // signals 本质是 brief/快讯，不标 incomplete；cases 中轻量 campaign 短讯只要
-    // 有正文块即视为正常 brief，不再因字数<800而满屏「档案未完成」。
-    for (const item of parsed.signals) item.thin = false;
-    for (const item of parsed.cases) {
-      if (typeof item.thin !== 'boolean') item.thin = false;
-      if (!item.thin && (!item.blocks || item.blocks.length === 0)) {
-        item.thin = true;
-      }
-    }
-    cache = parsed;
-  } catch {
-    cache = EMPTY;
-  }
+  cache = getLocalArchive();
   return cache;
 }
 

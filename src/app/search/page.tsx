@@ -3,7 +3,6 @@ import { SectionHeader } from "@/components/archive/SectionHeader";
 import { SearchExplorer } from "@/components/archive/SearchExplorer";
 import { getSignalsLive, getCasesLive } from "@/lib/data/live";
 
-export const runtime = "edge";
 export const metadata = { title: "全局搜索 · WORK / Archive" };
 
 export default async function SearchPage({

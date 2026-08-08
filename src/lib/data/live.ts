@@ -1,6 +1,6 @@
 import "server-only";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
-import archiveData from "../../../data/archive.json";
+import { getLocalArchive } from "@archive-data";
 import { SOURCE_REGISTRY } from "./sources.registry";
 import { COMPANY_REGISTRY } from "./companies.registry";
 import { PODCAST_CHANNELS } from "./podcasts.registry";
@@ -67,16 +67,7 @@ let cache: Archive | null = null;
 let source: "supabase" | "json" | null = null;
 
 function jsonArchive(): Archive {
-  const parsed = archiveData as Archive;
-  // signals 为 brief，不标 incomplete；cases 仅在没有正文块时才标 incomplete。
-  for (const item of parsed.signals) item.thin = false;
-  for (const item of parsed.cases) {
-    if (typeof item.thin !== "boolean") item.thin = false;
-    if (!item.thin && (!item.blocks || item.blocks.length === 0)) item.thin = true;
-  }
-  // 补全运行期派生所需但 archive.json 未必含的数组
-  parsed.podcastShows = parsed.podcastShows ?? parsed.podcasts;
-  return parsed;
+  return getLocalArchive();
 }
 
 function sb(): SupabaseClient | null {

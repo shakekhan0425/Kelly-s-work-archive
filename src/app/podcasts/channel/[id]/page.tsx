@@ -10,7 +10,6 @@ import {
   liveSource,
 } from "@/lib/data/live";
 
-export const runtime = "edge";
 
 /** 频道首字母封面（不依赖外部图片，永不挂） */
 function ChannelCover({ name, id }: { name: string; id: string }) {

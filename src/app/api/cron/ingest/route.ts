@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
 // 采集由 GitHub Actions 每 6 小时执行；本路由保留为兼容入口，避免把 Node 采集依赖打进 Edge Runtime。
-export const runtime = "edge";
 export const dynamic = "force-dynamic";
 
 /**

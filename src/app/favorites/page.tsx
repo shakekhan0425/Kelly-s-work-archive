@@ -3,7 +3,6 @@ import FavoritesBoard, { type FavEntry } from "@/components/archive/FavoritesBoa
 import { getSignalsLive, getCasesLive, getPodcastsLive } from "@/lib/data/live";
 
 export const metadata = { title: "我的收藏 · WORK / Archive" };
-export const runtime = "edge";
 export const dynamic = "force-dynamic";
 
 /**
