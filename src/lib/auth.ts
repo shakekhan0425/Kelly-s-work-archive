@@ -21,8 +21,8 @@ export function supabaseConfigured(): boolean {
 
 /**
  * Gate for authenticated routes. With Supabase configured it resolves the
- * real user; otherwise it accepts the local demo session cookie so the
- * product is previewable without a backend (master prompt Phase 0).
+ * real user; otherwise it accepts the public session cookie so the
+ * product remains usable without a backend.
  */
 export async function requireUser(): Promise<AppUser> {
   if (supabaseConfigured()) {
@@ -44,10 +44,10 @@ export async function requireUser(): Promise<AppUser> {
   const cookieStore = await cookies();
   if (cookieStore.get(DEMO_COOKIE)?.value === "1") {
     return {
-      id: "demo",
-      email: "demo@archive.local",
-      name: "演示用户",
-      demo: true,
+      id: "kelly",
+      email: null,
+      name: "Kelly",
+      demo: false,
     };
   }
 

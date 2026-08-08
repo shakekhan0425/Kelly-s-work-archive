@@ -1,9 +1,7 @@
-/**
- * Server-safe image with a static fallback (no onError / no client interactivity).
- * 用于 server component（如 /desk）中需要「空 src 时显示占位图」的场合——
- * 服务端预渲染不允许事件处理器，故不依赖 onError，仅在 src 为空时直接渲染兜底。
- * 需要运行时加载失败兜底的 client 组件请用 ImageWithFallback。
- */
+"use client";
+
+import { useState } from "react";
+
 interface ServerImageProps {
   src?: string | null;
   className?: string;
@@ -12,6 +10,13 @@ interface ServerImageProps {
   fallback?: { source?: string; category?: string; date?: string };
 }
 
+/**
+ * Server-render friendly image with runtime fallback.
+ *
+ * The component itself is a Client Component (so it can handle `onError`),
+ * but it is safe to render inside Server Components because it does not
+ * rely on browser-only APIs during the initial render.
+ */
 export default function ServerImage({
   src,
   className = "",
@@ -19,7 +24,9 @@ export default function ServerImage({
   loading = "lazy",
   fallback,
 }: ServerImageProps) {
-  if (!src) {
+  const [failed, setFailed] = useState(false);
+
+  if (!src || failed) {
     return (
       <div className={`img-fallback ${className}`} role="img" aria-label={alt || "封面待补"}>
         <span className="img-fallback-source">{fallback?.source ?? "WORK"}</span>
@@ -28,8 +35,15 @@ export default function ServerImage({
       </div>
     );
   }
+
   return (
     // eslint-disable-next-line @next/next/no-img-element
-    <img src={src} alt={alt} className={className} loading={loading} />
+    <img
+      src={src}
+      alt={alt}
+      className={className}
+      loading={loading}
+      onError={() => setFailed(true)}
+    />
   );
 }

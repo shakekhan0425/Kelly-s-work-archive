@@ -6,12 +6,12 @@ interface Props {
   eyebrow: string;
   title: string;
   /** planned phase for this surface, e.g. "Phase 1" */
-  phase: string;
+  phase?: string;
   description: string;
   primaryAction?: { href: string; label: string };
 }
 
-/** Reusable placeholder for routes not built in Phase 0. */
+/** Reusable placeholder for routes not built yet. */
 export function StubPage({
   eyebrow,
   title,
@@ -21,12 +21,14 @@ export function StubPage({
 }: Props) {
   return (
     <ArchiveShell>
-      <div style={{ marginBottom: 18 }}>
-        <span className="issue-no">BETA · {phase}</span>
-      </div>
+      {phase ? (
+        <div style={{ marginBottom: 18 }}>
+          <span className="issue-no">{phase}</span>
+        </div>
+      ) : null}
       <SectionHeader eyebrow={eyebrow} title={title} />
       <EmptyArchiveState
-        mark="Beta"
+        mark=""
         title={description}
         hint="该模块已纳入产品规划，当前展示最终视觉方向。"
       >

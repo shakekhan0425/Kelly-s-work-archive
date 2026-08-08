@@ -84,7 +84,7 @@ function LoginInner() {
               marginBottom: 14,
             }}
           >
-            这是一个公开演示站点，无需登录即可浏览全部真实抓取内容。点击下方按钮进入档案馆。
+            这是一个公开档案站点，无需登录即可浏览全部真实抓取内容。点击下方按钮进入档案馆。
           </p>
           <button
             className="btn btn-primary"
@@ -92,7 +92,7 @@ function LoginInner() {
             style={{ width: "100%" }}
             onClick={enterDemo}
           >
-            进入演示模式
+            进入档案馆
           </button>
 
           <p style={{ marginTop: 22, fontSize: 12 }}>

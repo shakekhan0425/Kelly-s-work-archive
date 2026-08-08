@@ -300,7 +300,39 @@ export async function getCompanyDossiersLive(category?: CompanyCategory): Promis
 
 export async function getItemByIdLive(id: string): Promise<ArchiveItem | PodcastItem | undefined> {
   const a = await getArchiveLive();
-  return [...a.signals, ...a.cases, ...a.podcasts].find((s) => s.id === id);
+  const found = [...a.signals, ...a.cases, ...a.podcasts].find((s) => s.id === id);
+  if (found) return found;
+
+  // 防御性兜底：即使 archive 缓存回退到本地 JSON（新采集的 id 不在本地），
+  // 仍直接到 Supabase 单表查询，避免详情页间歇性 404。
+  const client = sb();
+  if (!client) return undefined;
+
+  const ids = encodeURIComponent(id);
+  const [sig, cas, pod] = await Promise.all([
+    client
+      .from("signals")
+      .select("data")
+      .filter("data->>id", "eq", id)
+      .maybeSingle(),
+    client
+      .from("cases")
+      .select("data")
+      .filter("data->>id", "eq", id)
+      .maybeSingle(),
+    client
+      .from("podcasts")
+      .select("data")
+      .filter("data->>id", "eq", id)
+      .maybeSingle(),
+  ]);
+
+  const row =
+    (sig.data?.data as ArchiveItem | PodcastItem | undefined) ||
+    (cas.data?.data as ArchiveItem | undefined) ||
+    (pod.data?.data as PodcastItem | undefined);
+
+  return row;
 }
 
 export async function getItemsByIdsLive(ids: string[]): Promise<ArchiveItem[]> {

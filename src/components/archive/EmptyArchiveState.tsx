@@ -8,11 +8,11 @@ interface Props {
   children?: ReactNode;
 }
 
-/** Warm, editorial empty state (master prompt §27). */
+/** Warm, editorial empty state. */
 export function EmptyArchiveState({ mark = "Empty", title, hint, children }: Props) {
   return (
     <div className="empty-state" role="status">
-      <div className="empty-mark">{mark}</div>
+      {mark ? <div className="empty-mark">{mark}</div> : null}
       <div style={{ fontFamily: "var(--font-serif-cn)", fontSize: 15, color: "var(--color-ink)" }}>
         {title}
       </div>

@@ -3779,3 +3779,72 @@ button:active, .btn:active, .icon-btn:active, .fav-btn:active, .chip:active, .fi
   justify-content: space-between;
   margin-bottom: 18px;
 }
+
+/* ── Settings page ── */
+.settings-grid {
+  display: grid;
+  gap: 18px;
+  max-width: 760px;
+  margin-top: 20px;
+}
+.settings-card {
+  background: var(--color-paper-light);
+  border: 1px solid var(--color-line);
+  border-radius: 4px;
+  padding: 18px 20px;
+}
+.settings-h {
+  font-family: var(--font-condensed);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 12px;
+  color: var(--color-ink-muted);
+  margin: 0 0 14px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--color-line);
+}
+.settings-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 0;
+}
+.settings-row + .settings-row {
+  border-top: 1px solid var(--color-line);
+}
+.settings-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  color: var(--color-ink);
+  flex: none;
+}
+.settings-body {
+  flex: 1;
+  min-width: 0;
+}
+.settings-label {
+  font-weight: 500;
+  color: var(--color-ink);
+  font-size: 14px;
+}
+.settings-desc {
+  font-size: 13px;
+  color: var(--color-ink-muted);
+  line-height: 1.45;
+  margin-top: 2px;
+}
+.settings-toast {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  background: var(--color-ink);
+  color: var(--color-paper-light);
+  padding: 10px 16px;
+  border-radius: 4px;
+  font-size: 13px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+  animation: waPageIn 180ms ease-out forwards;
+}
