@@ -17,6 +17,7 @@ import { signalCategoryOf } from "@/lib/data/signal-categories";
 import { contentScopeOf, CONTENT_SCOPE } from "@/lib/data/content-scope";
 import { SIGNAL_CATEGORIES } from "@/lib/data/signal-categories";
 
+export const runtime = "edge";
 export const metadata = { title: "市场情报 · WORK / Archive" };
 
 export default async function SignalsPage({

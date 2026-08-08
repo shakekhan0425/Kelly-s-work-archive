@@ -1,6 +1,4 @@
 import 'server-only';
-import fs from 'node:fs';
-import path from 'node:path';
 import type {
   Archive,
   ArchiveItem,
@@ -24,6 +22,7 @@ import type {
 import { SOURCE_REGISTRY } from './sources.registry';
 import { COMPANY_REGISTRY } from './companies.registry';
 import { PODCAST_CHANNELS } from './podcasts.registry';
+import archiveData from '../../../data/archive.json';
 import episodesData from './podcasts.episodes.json';
 import caseStudiesData from './case-studies.json';
 
@@ -64,9 +63,7 @@ let cache: Archive | null = null;
 export function getArchive(): Archive {
   if (cache) return cache;
   try {
-    const file = path.join(process.cwd(), 'data', 'archive.json');
-    const raw = fs.readFileSync(file, 'utf8');
-    const parsed = JSON.parse(raw) as Archive;
+    const parsed = archiveData as Archive;
     // 诚实标注：只有正文块完全缺失才标记为 incomplete。
     // signals 本质是 brief/快讯，不标 incomplete；cases 中轻量 campaign 短讯只要
     // 有正文块即视为正常 brief，不再因字数<800而满屏「档案未完成」。

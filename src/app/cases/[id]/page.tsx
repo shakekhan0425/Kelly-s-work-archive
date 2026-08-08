@@ -21,6 +21,8 @@ import {
   getCaseStudyLive,
 } from "@/lib/data/live";
 
+export const runtime = "edge";
+
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const item = await getItemByIdLive(id);

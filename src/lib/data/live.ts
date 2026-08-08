@@ -1,7 +1,6 @@
 import "server-only";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
-import fs from "node:fs";
-import path from "node:path";
+import archiveData from "../../../data/archive.json";
 import { SOURCE_REGISTRY } from "./sources.registry";
 import { COMPANY_REGISTRY } from "./companies.registry";
 import { PODCAST_CHANNELS } from "./podcasts.registry";
@@ -68,9 +67,7 @@ let cache: Archive | null = null;
 let source: "supabase" | "json" | null = null;
 
 function jsonArchive(): Archive {
-  const file = path.join(process.cwd(), "data", "archive.json");
-  const raw = fs.readFileSync(file, "utf8");
-  const parsed = JSON.parse(raw) as Archive;
+  const parsed = archiveData as Archive;
   // signals 为 brief，不标 incomplete；cases 仅在没有正文块时才标 incomplete。
   for (const item of parsed.signals) item.thin = false;
   for (const item of parsed.cases) {

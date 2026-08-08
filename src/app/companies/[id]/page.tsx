@@ -5,6 +5,8 @@ import { BackButton } from "@/components/archive/BackButton";
 import { getCompanyDossierLive, getCompanyGroups } from "@/lib/data/live";
 import { ReadingTracker } from "@/components/archive/ReadingTracker";
 
+export const runtime = "edge";
+
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const d = await getCompanyDossierLive(id);
