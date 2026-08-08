@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 
 interface Props {
-  /** Large italic mark, e.g. "Empty" or "Soon" */
+  /** Large italic mark, e.g. "Empty" or "Beta" */
   mark?: string;
   title: string;
   hint?: string;

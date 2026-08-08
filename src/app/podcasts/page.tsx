@@ -49,7 +49,7 @@ async function ChannelCard({ ch }: { ch: PodcastChannelWithHealth }) {
           ))}
         </ul>
       ) : (
-        <p className="podch-pending">单集接入中 · 真实 RSS 暂未抓取（渠道已收录，不展示占位单集）</p>
+        <p className="podch-pending">该节目真实单集尚未收录（渠道已收录，不展示占位单集）</p>
       )}
       <a className="src-go" href={ch.site} target="_blank" rel="noreferrer">
         访问节目 ↗

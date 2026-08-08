@@ -1,4 +1,5 @@
 import Link from "next/link";
+import ImageWithFallback from "@/components/archive/ImageWithFallback";
 
 export interface VizItem {
   id: string;
@@ -114,8 +115,13 @@ export function VisualsExplorer({
               target="_blank"
               rel="noreferrer"
             >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img className="viz-img" src={it.hero} alt={it.title} loading="lazy" />
+              <ImageWithFallback
+                className="viz-img"
+                src={it.hero}
+                alt={it.title}
+                loading="lazy"
+                fallback={{ source: it.sourceName, category: it.vertical }}
+              />
               <div className="viz-meta">
                 <div className="viz-title">{it.title}</div>
                 <div className="viz-foot">

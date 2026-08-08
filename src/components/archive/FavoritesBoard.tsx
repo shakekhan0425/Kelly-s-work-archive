@@ -99,8 +99,7 @@ export default function FavoritesBoard({ index }: { index: FavEntry[] }) {
           action={{ href: "/collections", label: "主题收藏集" }}
         />
         <p className="list-dek" style={{ maxWidth: "72ch" }}>
-          收藏保存在本机浏览器，无需账户。点「离线存档」后，即使断网也能在装到桌面的
-          App 里继续阅读这些正文。
+          收藏自动同步到云端，无需账户。点「离线存档」可把正文缓存到本地，断网也能继续阅读。
         </p>
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 12 }}>
           {items.length > 0 ? (

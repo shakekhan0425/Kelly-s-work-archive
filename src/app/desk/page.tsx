@@ -9,6 +9,7 @@ import {
   getCaseStudyLive,
 } from "@/lib/data/live";
 import { ArrowRight } from "lucide-react";
+import ServerImage from "@/components/archive/ServerImage";
 
 const HERO_IMAGES = [
   "https://images.unsplash.com/photo-1523906834658-6e24ef2386f9?w=1600&q=80", // Amalfi coast
@@ -85,8 +86,7 @@ export default async function DeskPage() {
           </div>
 
           <div className="desk-hero-visual">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
+            <ServerImage
               className="desk-hero-image"
               src={heroImage()}
               alt="Europe film photography"
@@ -156,8 +156,7 @@ export default async function DeskPage() {
                     </div>
                   </div>
                   <div className="rail-card-media">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
+                    <ServerImage
                       src={
                         "image" in casePick && (casePick as any).image
                           ? (casePick as any).image
@@ -167,6 +166,7 @@ export default async function DeskPage() {
                       }
                       alt=""
                       loading="lazy"
+                      fallback={{ source: "CASE", category: "" }}
                     />
                   </div>
                 </div>
@@ -218,8 +218,12 @@ export default async function DeskPage() {
                   </div>
                   <div className="rail-card-media round">
                     {"showImage" in podcastPick && podcastPick.showImage ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={podcastPick.showImage} alt="" loading="lazy" />
+                      <ServerImage
+                        src={podcastPick.showImage}
+                        alt=""
+                        loading="lazy"
+                        fallback={{ source: "PODCAST", category: "" }}
+                      />
                     ) : (
                       <span>♪</span>
                     )}

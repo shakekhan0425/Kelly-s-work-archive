@@ -137,7 +137,7 @@ export default async function CaseDetail({ params }: { params: Promise<{ id: str
 
             <ArticleBody blocks={item.blocks} lang={item.lang} />
 
-            {/* §2.6 Case Study Breakdown — Tier A 深度富化层；无 curated 数据则标注「待研究」 */}
+            {/* §2.6 Case Study Breakdown — Tier A 深度富化层；无 curated 数据则显示中性提示 */}
             <section className="ki-block">
               <div className="ki-head">
                 <span className="ki-tag">Case Study Breakdown</span>
@@ -146,7 +146,7 @@ export default async function CaseDetail({ params }: { params: Promise<{ id: str
                     Tier {cs.tier} 已深拆 · 证据等级 {cs.evidenceGrade} · 置信度 {Math.round(cs.confidence * 100)}%
                   </span>
                 ) : (
-                  <span className="ki-note stamp-incomplete">待研究 · 尚未深拆</span>
+                  <span className="ki-note stamp-incomplete">暂无深拆版本</span>
                 )}
               </div>
               <div className="cb-grid">

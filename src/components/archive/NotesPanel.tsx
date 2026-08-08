@@ -23,13 +23,13 @@ export default function NotesPanel({ itemId, itemTitle }: { itemId: string; item
       <div className="aside-h">个人笔记</div>
       <textarea
         className="note-area"
-        placeholder="记录你的洞察、可复用素材、面试要点…（本机保存）"
+        placeholder="记录你的洞察、可复用素材、面试要点…（自动同步到云端）"
         value={draft}
         onChange={(e) => setDraft(e.target.value)}
         onBlur={commit}
       />
       <span className="aside-hint">
-        {saved ? "已保存到本机 ✓" : "仅保存在本机浏览器"}
+        {saved ? "已保存到云端 ✓" : "自动同步到云端"}
       </span>
     </div>
   );

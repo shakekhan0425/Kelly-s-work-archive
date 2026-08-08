@@ -1,4 +1,5 @@
 import type { Block } from '@/lib/data/types';
+import ImageWithFallback from "@/components/archive/ImageWithFallback";
 
 /** 中文占比判断，决定排版字体族 */
 export function isChinese(text: string): boolean {
@@ -55,8 +56,12 @@ export default function ArticleBody({ blocks, lang }: { blocks: Block[]; lang: s
           case 'image':
             return (
               <figure key={i} className="read-figure">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={b.src} alt={b.caption || ''} loading="lazy" />
+                <ImageWithFallback
+                  src={b.src}
+                  alt={b.caption || ''}
+                  loading="lazy"
+                  fallback={{ source: "ARCHIVE", category: "" }}
+                />
                 {b.caption ? <figcaption>{b.caption}</figcaption> : null}
               </figure>
             );

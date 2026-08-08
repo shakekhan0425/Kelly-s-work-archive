@@ -29,7 +29,7 @@ function accessLabel(m: string): string {
   if (m === "newsletter") return "邮件订阅";
   if (m === "paywall") return "付费墙";
   if (m === "login") return "登录";
-  if (m === "restricted") return "受限 · 暂不可采集";
+  if (m === "restricted") return "受限接入";
   return m;
 }
 
@@ -138,7 +138,7 @@ function SourceCard({ s }: { s: SourceIntel }) {
       </div>
       <div className="src-foot">
         <span className={`src-status ${s.live ? "live" : "pending"}`}>
-          {s.live ? `● 已接入 · ${s.itemCount ?? 0} 条` : "○ 待接入"}
+          {s.live ? `● 已接入 · ${s.itemCount ?? 0} 条` : "○ 规划中"}
         </span>
         <span className="src-links">
           <a className="src-go" href={s.url} target="_blank" rel="noreferrer">

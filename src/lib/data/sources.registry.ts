@@ -8,7 +8,7 @@ import type { SourceIntel } from "./types";
  * 运行时通过 id 与 live 状态合并。
  *
  * live:true  → 已被真实抓取管道接入（archive.json 中存在该 sourceId）
- * live:false → 已规划、待接入（属于 Demo 阶段来源体系，非假内容）
+ * live:false → 已规划、尚未接入（属于来源体系规划项，非假内容）
  *
  * 分组顺序：Marketing → Luxury → Beauty → Business Strategy(含 Consumer Research / Business-Finance)
  * → AI Business(Technology/AI) → Podcast。

@@ -1,9 +1,9 @@
 /**
- * 持久化层（Phase 6 / 全部继续）。
+ * 持久化层（本地缓存）。
  *
- * 设计：localStorage 优先。无 Supabase 凭据时（当前 demo 默认）所有用户数据
- * 落在浏览器本地；配置 NEXT_PUBLIC_SUPABASE_URL / ANON_KEY 后，可把同一份
- * 结构镜像到 Supabase（见 supabase/0001_user_data.sql，已带 RLS）。
+ * 离线优先：用户自生成数据先写入浏览器 localStorage，再由 use-persistence
+ * 在后台镜像到 Supabase 匿名桶（详见 supabase/migrations/0002_user_data.sql，
+ * 已带 RLS，匿名可读写单一 global 桶）。
  *
  * 数据全部是用户自生成内容（笔记 / 收藏 / 观察名单 / 作品集草稿），
  * 不含任何受版权保护的正文抓取内容——符合产品「不存受版权内容」的硬约束。

@@ -92,7 +92,7 @@ export default async function PodcastChannelPage({ params }: { params: Promise<{
             ))}
           </ul>
         ) : (
-          <p className="ch-pending">该频道真实单集暂未抓取。已收录频道目录，部署到 Vercel 后 Cron 会自动采集真实单集。</p>
+          <p className="ch-pending">该频道真实单集尚未收录。已收录频道目录，Cron 会自动采集真实单集。</p>
         )}
       </article>
     </ArchiveShell>

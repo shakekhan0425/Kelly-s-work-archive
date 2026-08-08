@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { CaseStudy } from "@/lib/data/types";
+import ImageWithFallback from "@/components/archive/ImageWithFallback";
 
 /* Curated Unsplash lifestyle photography mapped by case id.
    Using real editorial/lifestyle imagery lets the wall feel like
@@ -107,12 +108,12 @@ export default function PortfolioBoard({ xhsPosts }: { xhsPosts: CaseStudy[] }) 
                 className="pf-xhs-card"
               >
                 <div className="pf-xhs-cover-wrap">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
+                    <ImageWithFallback
                     className="pf-xhs-cover"
                     src={coverImage(post)}
                     alt={post.campaignName}
                     loading="lazy"
+                    fallback={{ source: post.brand || "CASE", category: "" }}
                   />
                 </div>
                 <div className="pf-xhs-body">

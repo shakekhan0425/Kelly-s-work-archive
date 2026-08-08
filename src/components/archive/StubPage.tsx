@@ -22,13 +22,13 @@ export function StubPage({
   return (
     <ArchiveShell>
       <div style={{ marginBottom: 18 }}>
-        <span className="issue-no">PLANNED · {phase}</span>
+        <span className="issue-no">BETA · {phase}</span>
       </div>
       <SectionHeader eyebrow={eyebrow} title={title} />
       <EmptyArchiveState
-        mark="Soon"
+        mark="Beta"
         title={description}
-        hint="此模块将在对应开发阶段实现，当前仅展示最终视觉方向。"
+        hint="该模块已纳入产品规划，当前展示最终视觉方向。"
       >
         {primaryAction && (
           <a href={primaryAction.href} className="btn btn-primary">

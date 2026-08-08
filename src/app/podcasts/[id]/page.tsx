@@ -10,6 +10,7 @@ import {
   buildPodcastIntel,
   formatDate,
 } from "@/lib/data/live";
+import ImageWithFallback from "@/components/archive/ImageWithFallback";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -52,10 +53,12 @@ export default async function PodcastDetail({ params }: { params: Promise<{ id: 
             ) : null}
             <span className="stamp stamp-lav">EPISODE</span>
           </div>
-          {ep.showImage ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img className="read-hero" src={ep.showImage} alt="" />
-          ) : null}
+          <ImageWithFallback
+            className="read-hero"
+            src={ep.showImage}
+            alt=""
+            fallback={{ source: ep.show || "PODCAST", category: ep.channelId || "" }}
+          />
         </header>
 
         <div className="read-grid">

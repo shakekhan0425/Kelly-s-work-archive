@@ -20,7 +20,7 @@ export default function ProfilePage() {
         <div className="eyebrow" style={{ marginBottom: 6 }}>Me</div>
         <h1 style={{ fontSize: 30, lineHeight: 1.1 }}>我的工作台</h1>
         <p className="list-dek" style={{ maxWidth: "70ch", marginTop: 8 }}>
-          这里汇聚你的收藏与阅读进度，数据保存在本机浏览器，离线也可读。
+          这里汇聚你的收藏与阅读进度，数据已同步到云端，多设备可读。
         </p>
 
         <div className="profile-grid">

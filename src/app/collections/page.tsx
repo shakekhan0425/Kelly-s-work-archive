@@ -21,7 +21,7 @@ export default function CollectionsPage() {
         <span className="bookmark-fold" aria-hidden="true" />
         <SectionHeader eyebrow="Collections" title="收藏集" action={{ href: "/desk", label: "返回今日" }} />
         <p className="list-dek" style={{ maxWidth: "72ch" }}>
-          主题式收藏入口，聚合真实档案。点击进入对应筛选视图；手动收藏功能将在接入账户后开放。
+          主题式收藏入口，聚合真实档案。点击进入对应筛选视图；单篇档案可在档案页加入「我的收藏」。
         </p>
       </section>
 

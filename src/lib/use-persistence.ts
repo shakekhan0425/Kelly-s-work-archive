@@ -10,16 +10,51 @@ import {
   type WatchItem,
   type Watchlist,
 } from "./persistence";
+import { getBrowserSupabase } from "./supabase/client";
 
 /**
- * 统一用户存储 hook（localStorage 优先）。
- * 每个组件读取时都重新从 localStorage 取数，因此跨页面导航天然一致。
+ * 统一用户存储 hook（离线优先 + Supabase 云端同步）。
+ * - 立即从 localStorage 取数（跨页一致、首屏不闪）。
+ * - 挂载时后台从 Supabase 匿名桶水合：云端有数据则合并，云端空且有本地数据则把本地迁上去。
+ * - 每次变更：先写 localStorage（即时），再后台 upsert 到 Supabase。
+ * 表未建 / 离线时静默回退 localStorage，不影响浏览。
  */
+const BUCKET = "kelly_global";
+
 export function useUserStore() {
   const [store, setStore] = useState<UserStore | null>(null);
 
   useEffect(() => {
-    setStore(loadStore());
+    const local = loadStore();
+    setStore(local);
+    let cancelled = false;
+    (async () => {
+      const sb = getBrowserSupabase();
+      if (!sb) return;
+      try {
+        const { data, error } = await sb
+          .from("user_data")
+          .select("data, updated_at")
+          .eq("id", BUCKET)
+          .maybeSingle();
+        if (cancelled || error) return;
+        if (data?.data) {
+          const remote = data.data as Partial<UserStore>;
+          const merged = mergeStores(local, remote);
+          setStore(merged);
+          saveStore(merged);
+        } else if (hasContent(local)) {
+          await sb
+            .from("user_data")
+            .upsert({ id: BUCKET, data: local, updated_at: new Date().toISOString() });
+        }
+      } catch {
+        /* 离线 / 表未建：保持本地 */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const update = useCallback((mut: (s: UserStore) => UserStore) => {
@@ -27,6 +62,7 @@ export function useUserStore() {
       const base = prev ?? loadStore();
       const next = mut(base);
       saveStore(next);
+      pushRemote(next);
       return next;
     });
   }, []);
@@ -142,3 +178,36 @@ export function usePortfolio() {
 }
 
 export type { Watchlist, WatchItem, PortfolioStory };
+
+/* ── 云端同步辅助 ── */
+function hasContent(s: UserStore): boolean {
+  return (
+    Object.keys(s.notes).length > 0 ||
+    s.favorites.length > 0 ||
+    s.watchlists.length > 0 ||
+    s.portfolio.length > 0
+  );
+}
+
+function mergeStores(local: UserStore, remote: Partial<UserStore>): UserStore {
+  const notes = { ...local.notes, ...(remote.notes ?? {}) };
+  const favorites = Array.from(new Set([...local.favorites, ...(remote.favorites ?? [])]));
+  const watchlists = mergeById(local.watchlists, remote.watchlists ?? []);
+  const portfolio = mergeById(local.portfolio, remote.portfolio ?? []);
+  return { notes, favorites, watchlists, portfolio };
+}
+
+function mergeById<T extends { id: string }>(a: T[], b: T[]): T[] {
+  const map = new Map<string, T>();
+  for (const x of a) map.set(x.id, x);
+  for (const x of b) map.set(x.id, x);
+  return Array.from(map.values());
+}
+
+function pushRemote(s: UserStore) {
+  const sb = getBrowserSupabase();
+  if (!sb) return;
+  sb.from("user_data")
+    .upsert({ id: BUCKET, data: s, updated_at: new Date().toISOString() })
+    .then(() => {}, () => {});
+}

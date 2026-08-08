@@ -39,7 +39,7 @@ export default function WatchlistsBoard({
         <div className="src-kicker">Watchlists</div>
         <h1 className="src-title">观察名单</h1>
         <p className="src-lead">
-          建立你长期关注的品牌、公司、来源与信号清单。数据保存在本机浏览器，可用于面试前快速复盘目标公司与行业动态。
+          建立你长期关注的品牌、公司、来源与信号清单。数据自动同步到云端，可用于面试前快速复盘目标公司与行业动态。
         </p>
       </header>
 
