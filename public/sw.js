@@ -6,18 +6,18 @@
    - 收藏页（?saved=1 / /favorites）：额外缓存正文，支持离线阅读
    - 跨域（字体/图片）：passthrough，缓存字体以提升二次加载
 */
-const VERSION = "wa-v4";
+const VERSION = "wa-v5";
 const SHELL = [
   "/",
-  "/desk",
-  "/signals",
-  "/cases",
-  "/companies",
-  "/podcasts",
-  "/english",
-  "/collections",
-  "/favorites",
-  "/offline",
+  "/desk/",
+  "/signals/",
+  "/cases/",
+  "/companies/",
+  "/podcasts/",
+  "/english/",
+  "/collections/",
+  "/favorites/",
+  "/offline/",
   "/manifest.webmanifest",
   "/icon.svg",
   "/icon-192.png",

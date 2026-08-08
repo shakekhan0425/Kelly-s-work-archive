@@ -7,7 +7,7 @@ export default function manifest(): MetadataRoute.Manifest {
     name: "WORK / Archive · 营销情报工作台",
     short_name: "WORK Archive",
     description: "跨行业营销情报、品牌案例、公司研究与播客情报的市场营销情报平台。",
-    start_url: "/desk",
+    start_url: "/desk/",
     scope: "/",
     display: "standalone",
     orientation: "portrait",
@@ -23,9 +23,9 @@ export default function manifest(): MetadataRoute.Manifest {
       { src: "/icon.svg", sizes: "any", type: "image/svg+xml", purpose: "any" },
     ],
     shortcuts: [
-      { name: "每日简报", short_name: "简报", url: "/desk" },
-      { name: "市场情报", short_name: "情报", url: "/signals" },
-      { name: "我的收藏", short_name: "收藏", url: "/favorites" },
+      { name: "每日简报", short_name: "简报", url: "/desk/" },
+      { name: "市场情报", short_name: "情报", url: "/signals/" },
+      { name: "我的收藏", short_name: "收藏", url: "/favorites/" },
     ],
   };
 }
