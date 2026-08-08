@@ -2,27 +2,26 @@
 # Wechat2RSS 私有云部署（Sealos / Railway / 任意容器平台）
 # 不在本机（Mac）运行；部署到云端后由 Supabase Cron 远程调用。
 #
-# 官方项目：https://github.com/wangfenjin/wechat2rss
-# 说明：下方 DATA_DIR / 端口以官方当前镜像为准；若官方改了数据目录，
-#       请将 volume 挂载点调整为官方文档中的持久化路径（通常为 /app/data）。
+# 官方项目：https://github.com/ttttmr/Wechat2RSS
+# 当前官方镜像端口为 8080，持久化目录为 /wechat2rss。
 # ============================================================
 
 services:
   wechat2rss:
-    # 使用官方当前镜像标签（部署前请到上方仓库确认 latest 仍为可用标签）
-    image: wangfenjin/wechat2rss:latest
+    image: ttttmr/wechat2rss:latest
     container_name: wechat2rss
     restart: unless-stopped
     ports:
-      - "8000:8000"
+      - "8080:8080"
     environment:
-      PORT: "8000"
-      DATA_DIR: "/app/data"          # 持久化目录（订阅 + 登录态）
-      # 可选：给管理端加访问密码（防止他人扫你的后台）
-      # PASSWORD: "换成你自己的强密码"
+      RSS_HTTPS: "1"
+      TZ: "Asia/Shanghai"
+      # RSS_HOST: "你的云端域名"
+      # LIC_EMAIL: "官方激活邮箱"
+      # LIC_CODE: "官方激活码"
     volumes:
       # 关键：容器重启后订阅与微信登录态不能丢失 → 持久卷
-      - wechat2rss-data:/app/data
+      - wechat2rss-data:/wechat2rss
 
 volumes:
   wechat2rss-data:
