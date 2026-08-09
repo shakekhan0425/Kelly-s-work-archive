@@ -69,7 +69,7 @@ export const PAGE_SIZE = 24;
 let cache: Archive | null = null;
 let cacheAt = 0;
 let source: "supabase" | "json" | null = null;
-const CACHE_TTL_MS = 5 * 60 * 1000;
+const CACHE_TTL_MS = 60 * 1000;
 
 function jsonArchive(): Archive {
   return cleanArchive(getLocalArchive());
@@ -117,9 +117,16 @@ async function supabaseArchive(client: SupabaseClient): Promise<Archive> {
   // 关键：若核心表查询报错（最常见=表尚未建 / RLS 拦截），必须抛出，
   // 让 getArchiveLive 回退本地 JSON。否则会静默返回空数据却仍标记为「supabase」，
   // 导致页面空内容 + 假的「● 实时」徽标。
-  const coreErrs = [signalsRes, casesRes, podcastsRes, englishRes, sourcesRes, companiesRes]
-    .filter((r) => r.error)
-    .map((r) => r.error!.message);
+  const coreErrs = [
+    { name: "signals", response: signalsRes },
+    { name: "cases", response: casesRes },
+    { name: "podcasts", response: podcastsRes },
+    { name: "english", response: englishRes },
+    { name: "sources", response: sourcesRes },
+    { name: "company_refs", response: companiesRes },
+  ]
+    .filter(({ response }) => response.error)
+    .map(({ name, response }) => `${name}: ${response.error!.message}`);
   if (coreErrs.length) {
     throw new Error("Supabase 核心表读取失败: " + coreErrs.join("; "));
   }
@@ -192,13 +199,15 @@ export async function getArchiveLive(): Promise<Archive> {
   if (cache && Date.now() - cacheAt < CACHE_TTL_MS) return cache;
   const client = sb();
   if (client) {
-    try {
-      cache = await supabaseArchive(client);
-      cacheAt = Date.now();
-      source = "supabase";
-      return cache;
-    } catch (e) {
-      console.error("[live] Supabase 读取失败，回退本地 JSON：", e);
+    for (let attempt = 1; attempt <= 2; attempt += 1) {
+      try {
+        cache = await supabaseArchive(client);
+        cacheAt = Date.now();
+        source = "supabase";
+        return cache;
+      } catch (e) {
+        console.error(`[live] Supabase 读取失败（第 ${attempt} 次）：`, e);
+      }
     }
   }
   cache = jsonArchive();

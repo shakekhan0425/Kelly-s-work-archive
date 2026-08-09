@@ -6,7 +6,7 @@
    - 收藏页（?saved=1 / /favorites）：额外缓存正文，支持离线阅读
    - 跨域（字体/图片）：passthrough，缓存字体以提升二次加载
 */
-const VERSION = "wa-v5";
+const VERSION = "wa-v6";
 const SHELL = [
   "/",
   "/desk/",
@@ -81,7 +81,7 @@ self.addEventListener("fetch", (event) => {
   // 导航：优先请求最新页面，离线时再回退到缓存
   if (req.mode === "navigate") {
     event.respondWith(
-      fetch(req)
+      fetch(req, { cache: "no-store" })
         .then((res) => {
           if (!res.ok) throw new Error(`Navigation failed: ${res.status}`);
           const copy = res.clone();

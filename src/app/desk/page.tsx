@@ -19,6 +19,8 @@ const HERO_IMAGES = [
 ];
 const DISPLAY_TIME_ZONE = "Asia/Shanghai";
 
+export const dynamic = "force-dynamic";
+
 function formatDeskTime(iso: string): string {
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return "";

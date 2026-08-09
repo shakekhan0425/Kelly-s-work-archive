@@ -5,6 +5,7 @@ import { getPodcastChannelsLive, getPodcastEpisodesLive, formatDate, liveSource 
 import type { PodcastChannelWithHealth, PodcastEpisode } from "@/lib/data/types";
 
 export const metadata = { title: "Podcast Intelligence · WORK / Archive" };
+export const dynamic = "force-dynamic";
 
 /** 频道首字母封面（不依赖外部图片，永不挂） */
 function ChannelCover({ name, id }: { name: string; id: string }) {

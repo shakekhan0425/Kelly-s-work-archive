@@ -35,6 +35,7 @@ function accessLabel(m: string): string {
 }
 
 export const metadata = { title: "来源体系 · Source Intelligence" };
+export const dynamic = "force-dynamic";
 
 export default async function SourcesPage() {
   const [groups, all] = await Promise.all([getSourceGroupsLive(), getSourceIntelLive()]);

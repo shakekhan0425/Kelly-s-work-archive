@@ -4,7 +4,7 @@ import { formatDate, getEnglishLive, liveSource } from "@/lib/data/live";
 import { ENGLISH_BRIEFS } from "@/lib/data/english.briefs";
 
 export const metadata = { title: "商务英语 · WORK / Archive" };
-export const revalidate = 60;
+export const dynamic = "force-dynamic";
 
 export default async function EnglishPage() {
   const cards = await getEnglishLive();

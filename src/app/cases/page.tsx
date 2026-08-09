@@ -9,6 +9,7 @@ import { getCasesLive, getTopicsLive, paginate, liveSource } from "@/lib/data/li
 import { contentScopeOf, CONTENT_SCOPE } from "@/lib/data/content-scope";
 
 export const metadata = { title: "品牌案例库 · WORK / Archive" };
+export const dynamic = "force-dynamic";
 
 export default async function CasesPage({
   searchParams,
