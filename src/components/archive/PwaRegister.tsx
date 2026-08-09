@@ -23,8 +23,20 @@ export function PwaRegister() {
     if (process.env.NODE_ENV !== "production") return;
 
     const onLoad = () => {
-      navigator.serviceWorker.register("/sw.js").then((reg) => {
+      const hadController = Boolean(navigator.serviceWorker.controller);
+      let reloaded = false;
+      const onControllerChange = () => {
+        if (!hadController || reloaded) return;
+        reloaded = true;
+        window.location.reload();
+      };
+      navigator.serviceWorker.addEventListener("controllerchange", onControllerChange);
+      navigator.serviceWorker.register("/sw.js?v=wa-v7", { updateViaCache: "none" }).then((reg) => {
         setSwReg(reg);
+        void reg.update();
+        if (hadController && reg.waiting) {
+          reg.waiting.postMessage({ type: "SKIP_WAITING" });
+        }
         reg.addEventListener("updatefound", () => {
           const installing = reg.installing;
           installing?.addEventListener("statechange", () => {

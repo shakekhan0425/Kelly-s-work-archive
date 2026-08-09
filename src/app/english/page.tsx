@@ -1,13 +1,21 @@
 import { ArchiveShell } from "@/components/archive/ArchiveShell";
+import { Pager } from "@/components/archive/Pager";
 import { SectionHeader } from "@/components/archive/SectionHeader";
-import { formatDate, getEnglishLive, liveSource } from "@/lib/data/live";
+import { formatDate, getEnglishLive, liveSource, paginate } from "@/lib/data/live";
 import { ENGLISH_BRIEFS } from "@/lib/data/english.briefs";
 
 export const metadata = { title: "商务英语 · WORK / Archive" };
 export const dynamic = "force-dynamic";
 
-export default async function EnglishPage() {
-  const cards = await getEnglishLive();
+export default async function EnglishPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  const sp = await searchParams;
+  const rawPage = typeof sp.p === "string" ? sp.p : "1";
+  const page = Math.max(1, parseInt(rawPage, 10) || 1);
+  const pageRes = paginate(await getEnglishLive(), page);
   const src = liveSource();
 
   return (
@@ -42,8 +50,8 @@ export default async function EnglishPage() {
       <SectionHeader eyebrow="Live Corpus" title="实时语料" />
       <p className="en-sub-note">从真实行业文章原句抽取的商业 / 营销术语句型。点卡片右上角「读原文」可跳转来源。</p>
       <div className="en-grid" style={{ marginTop: 12 }}>
-        {cards.length > 0 ? (
-          cards.map((e) => {
+        {pageRes.items.length > 0 ? (
+          pageRes.items.map((e) => {
             // 由来源名派生稳定色相，生成杂志风封面
             let h = 0;
             for (const c of e.sourceName) h = (h * 31 + c.charCodeAt(0)) % 360;
@@ -82,6 +90,7 @@ export default async function EnglishPage() {
           <p className="list-dek">暂无英语条目。</p>
         )}
       </div>
+      <Pager basePath="/english" queryString="" page={pageRes.page} pages={pageRes.pages} />
 
       <SectionHeader eyebrow="Curated Vocabulary" title="系统化商务词卡 · 固定学习库" />
       <p className="en-sub-note">这是固定学习库，不随每日抓取变化；实时更新内容请看上面的「实时语料」。含句型 / 范例 / 面试应用，例句为教学示范，非引用特定文章。</p>
