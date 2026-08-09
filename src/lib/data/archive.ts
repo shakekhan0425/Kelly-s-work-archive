@@ -198,8 +198,8 @@ export function getItemsByIds(ids: string[]): ArchiveItem[] {
 }
 
 /** 同源 / 同话题的相关条目 */
-export function getRelated(item: ArchiveItem, limit = 4): ArchiveItem[] {
-  const all = getAllItems().filter((s) => s.id !== item.id);
+export function getRelated(item: ArchiveItem, limit = 4, archive: Archive = getArchive()): ArchiveItem[] {
+  const all = [...archive.signals, ...archive.cases, ...archive.podcasts].filter((s) => s.id !== item.id);
   const scored = all.map((s) => {
     let score = 0;
     s.topics.forEach((t) => item.topics.includes(t) && (score += 3));
@@ -229,8 +229,8 @@ export function getRelatedCompanies(item: ArchiveItem): CompanyDossier[] {
 }
 
 /** 由真实数据派生：本条情报关联的品牌案例（同话题 / 同品牌） */
-export function getRelatedCases(item: ArchiveItem, limit = 4): ArchiveItem[] {
-  const cases = getArchive().cases;
+export function getRelatedCases(item: ArchiveItem, limit = 4, archive: Archive = getArchive()): ArchiveItem[] {
+  const cases = archive.cases;
   const scored = cases.map((c) => {
     let score = 0;
     c.topics.forEach((t) => item.topics.includes(t) && (score += 3));
@@ -246,9 +246,9 @@ export function getRelatedCases(item: ArchiveItem, limit = 4): ArchiveItem[] {
 }
 
 /** 由真实数据派生：相关商务英语卡片（话题重叠则优先，否则返回空，页面引导至 /english） */
-export function getRelatedEnglish(item: ArchiveItem, limit = 2): EnglishCard[] {
+export function getRelatedEnglish(item: ArchiveItem, limit = 2, archive: Archive = getArchive()): EnglishCard[] {
   const hay = `${item.topics.join(' ')} ${item.title} ${item.summary}`.toLowerCase();
-  const all = getArchive().english;
+  const all = archive.english;
   const matched = all.filter((e) =>
     e.terms.some((t) => hay.includes(t.toLowerCase())) ||
     hay.includes(e.sourceName.toLowerCase()),
@@ -257,9 +257,9 @@ export function getRelatedEnglish(item: ArchiveItem, limit = 2): EnglishCard[] {
 }
 
 /** 由真实数据派生：本条情报关联的播客单集（按相关公司 / 品牌 / 话题匹配真实 RSS 文本） */
-export function getRelatedPodcasts(item: ArchiveItem, limit = 3): PodcastEpisode[] {
+export function getRelatedPodcasts(item: ArchiveItem, limit = 3, episodes: PodcastEpisode[] = PODCAST_EPISODES): PodcastEpisode[] {
   const cos = getRelatedCompanies(item).map((c) => c.id);
-  const scored = PODCAST_EPISODES.map((ep) => {
+  const scored = episodes.map((ep) => {
     const eh = `${ep.title} ${ep.summary}`.toLowerCase();
     let score = 0;
     for (const id of cos) {
@@ -340,11 +340,11 @@ export function getTodayIntelligence(archive: Archive = getArchive()): {
 }
 
 /** 延伸权威信源：A/B 级来源中类目与本条话题 / 垂直重叠者，供深挖（不编造，仅推荐） */
-export function getRelatedSources(item: ArchiveItem, limit = 6): SourceIntel[] {
+export function getRelatedSources(item: ArchiveItem, limit = 6, archive: Archive = getArchive()): SourceIntel[] {
   const vId = verticalOf(item);
   const vLabel = VERTICALS.find((v) => v.id === vId)?.label ?? '';
   const hay = `${item.category} ${item.topics.join(' ')} ${vLabel}`.toLowerCase();
-  const matched = getSourceIntel()
+  const matched = getSourceIntel(undefined, archive)
     .filter((s) => s.authority !== 'C')
     .filter((s) => {
       const sh = `${s.category} ${s.whyFollow}`.toLowerCase();
@@ -475,8 +475,8 @@ export function getVerticalsFrom(a: Archive): { id: string; label: string; zh: s
 /* ─────────── Source Intelligence Layer（Phase 1/2） ─────────── */
 
 /** 真实来源目录 + 运行时注入的抓取计数与 live 状态 */
-export function getSourceIntel(group?: SourceGroup): SourceIntel[] {
-  const counts = new Map(getArchive().sources.map((s) => [s.id, s.count]));
+export function getSourceIntel(group?: SourceGroup, archive: Archive = getArchive()): SourceIntel[] {
+  const counts = new Map(archive.sources.map((s) => [s.id, s.count]));
   const list = SOURCE_REGISTRY.map((s) => ({ ...s, itemCount: counts.get(s.id) ?? 0 }));
   return group ? list.filter((s) => s.group === group) : list;
 }
@@ -485,8 +485,8 @@ export function getSourceById(id: string): SourceIntel | undefined {
   return getSourceIntel().find((s) => s.id === id);
 }
 
-export function getSourceGroups(): { group: SourceGroup; label: string; count: number; live: number }[] {
-  const all = getSourceIntel();
+export function getSourceGroups(archive: Archive = getArchive()): { group: SourceGroup; label: string; count: number; live: number }[] {
+  const all = getSourceIntel(undefined, archive);
   const order: SourceGroup[] = ['Beauty', 'Marketing', 'Luxury', 'AI Business', 'Business Strategy', 'Podcast'];
   const labelMap: Record<SourceGroup, string> = {
     Beauty: '美妆',
