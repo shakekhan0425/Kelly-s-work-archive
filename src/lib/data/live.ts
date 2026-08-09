@@ -239,6 +239,7 @@ export async function getCompaniesLive(limit?: number): Promise<CompanyRef[]> {
 }
 
 export async function getPodcastChannelsLive(): Promise<PodcastChannelWithHealth[]> {
+  await getArchiveLive();
   const src = liveSource();
   // 频道始终来自真实 RSS 注册表（podcasts.episodes.json 的 channels 段），
   // 绝不能用 archive.json 的「播客文章」冒充频道。
@@ -258,8 +259,14 @@ export async function getPodcastChannelsLive(): Promise<PodcastChannelWithHealth
 }
 
 export async function getPodcastEpisodesLive(channelId?: string): Promise<PodcastEpisode[]> {
+  await getArchiveLive();
   const eps = liveOverrides.episodes;
-  return channelId ? eps.filter((e) => e.channelId === channelId) : eps;
+  const filtered = channelId ? eps.filter((e) => e.channelId === channelId) : eps;
+  return [...filtered].sort((a, b) => {
+    const at = a.publishedAt ? Date.parse(a.publishedAt) : 0;
+    const bt = b.publishedAt ? Date.parse(b.publishedAt) : 0;
+    return (Number.isFinite(bt) ? bt : 0) - (Number.isFinite(at) ? at : 0);
+  });
 }
 
 export async function getPodcastsLive(limit?: number): Promise<PodcastItem[]> {
@@ -342,6 +349,7 @@ export async function getCompanyDossierLive(id: string): Promise<CompanyDossier 
 }
 
 export async function getPodcastEpisodeByIdLive(id: string): Promise<PodcastEpisode | undefined> {
+  await getArchiveLive();
   return liveOverrides.episodes.find((e) => e.id === id);
 }
 

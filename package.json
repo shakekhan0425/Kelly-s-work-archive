@@ -19,6 +19,8 @@
     "ingest:web": "tsx pipeline/ingest-web.ts",
     "ingest:sites": "tsx pipeline/ingest-sites.ts",
     "ingest:cases": "tsx pipeline/ingest-cases.ts",
+    "ingest:podcasts": "tsx pipeline/fetch-podcasts.ts",
+    "ingest:english": "tsx pipeline/ingest-english.ts",
     "mark:live": "tsx pipeline/mark-live.ts"
   },
   "dependencies": {

@@ -2,11 +2,11 @@ import Link from "next/link";
 import { ArchiveShell } from "@/components/archive/ArchiveShell";
 import {
   getTodayIntelligence,
-  getSignalsLive,
   getCompanyDossiersLive,
   getArchiveLive,
   liveSource,
   getCaseStudyLive,
+  getPodcastEpisodesLive,
 } from "@/lib/data/live";
 import { ArrowRight } from "lucide-react";
 import ServerImage from "@/components/archive/ServerImage";
@@ -42,12 +42,12 @@ export default async function DeskPage() {
     day: "numeric",
   }).format(new Date());
 
-  const [archive, tiRaw, recent, dossiers] = await Promise.all([
-    getArchiveLive(),
-    getTodayIntelligence(await getArchiveLive()),
-    getSignalsLive({ limit: 12 }),
+  const archive = await getArchiveLive();
+  const [dossiers, latestEpisodes] = await Promise.all([
     getCompanyDossiersLive(),
+    getPodcastEpisodesLive(),
   ]);
+  const tiRaw = getTodayIntelligence(archive);
 
   // Desk 只展示已发布条目：摘要/正文缺失的 thin 项不进入今日情报列表与右栏精选
   const ti = {
@@ -65,7 +65,7 @@ export default async function DeskPage() {
     ? getCaseStudyLive(ti.caseItem.id) ?? ti.caseItem
     : publishedCases[0] ?? null;
   const companyPick = ti.company ?? dossiers.find((d) => d.tier === "A") ?? dossiers[0];
-  const podcastPick = ti.podcast ?? archive.podcasts[0];
+  const podcastPick = latestEpisodes[0] ?? ti.podcast ?? archive.podcasts[0];
 
   return (
     <ArchiveShell>

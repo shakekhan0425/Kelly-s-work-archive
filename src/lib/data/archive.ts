@@ -56,13 +56,22 @@ export function getSignals(opts: {
   return filterSignals(getArchive(), opts);
 }
 
+/** 统一按真实发布时间倒序，避免数据库返回顺序把旧条目留在首页。 */
+function newestFirst<T extends { publishedAt?: string | null }>(items: T[]): T[] {
+  return [...items].sort((a, b) => {
+    const at = a.publishedAt ? Date.parse(a.publishedAt) : 0;
+    const bt = b.publishedAt ? Date.parse(b.publishedAt) : 0;
+    return (Number.isFinite(bt) ? bt : 0) - (Number.isFinite(at) ? at : 0);
+  });
+}
+
 /** 纯过滤：给定 Archive，按条件筛信号（live.ts 复用，避免重复逻辑） */
 export function filterSignals(
   a: Archive,
   opts: { topic?: string; lang?: string; source?: string; category?: string; limit?: number } = {},
 ): ArchiveItem[] {
   const { topic, lang, source, category, limit } = opts;
-  let list = a.signals;
+  let list = newestFirst(a.signals);
   if (topic) list = list.filter((s) => s.topics.includes(topic));
   if (lang) list = list.filter((s) => s.lang === lang);
   if (source) list = list.filter((s) => s.sourceId === source);
@@ -76,13 +85,13 @@ export function getCases(opts: { topic?: string; limit?: number } = {}): Archive
 
 /** 纯过滤：给定 Archive，按条件筛案例（live.ts 复用） */
 export function filterCases(a: Archive, opts: { topic?: string; limit?: number } = {}): ArchiveItem[] {
-  let list = a.cases;
+  let list = newestFirst(a.cases);
   if (opts.topic) list = list.filter((s) => s.topics.includes(opts.topic!));
   return opts.limit ? list.slice(0, opts.limit) : list;
 }
 
 export function getPodcasts(limit?: number): PodcastItem[] {
-  const list = getArchive().podcasts;
+  const list = newestFirst(getArchive().podcasts);
   return limit ? list.slice(0, limit) : list;
 }
 
@@ -147,7 +156,7 @@ export function buildPodcastIntel(ep: PodcastEpisode): PodcastIntel {
 }
 
 export function getEnglish(limit?: number): EnglishCard[] {
-  const list = getArchive().english;
+  const list = newestFirst(getArchive().english);
   return limit ? list.slice(0, limit) : list;
 }
 
@@ -308,7 +317,10 @@ export function getTodayIntelligence(archive: Archive = getArchive()): {
   podcast?: PodcastItem;
   english?: EnglishCard;
 } {
-  const signals = archive.signals;
+  const signals = newestFirst(archive.signals);
+  const cases = newestFirst(archive.cases);
+  const podcasts = newestFirst(archive.podcasts);
+  const english = newestFirst(archive.english);
   const changes: ArchiveItem[] = [];
   for (const v of VERTICALS) {
     const s = signals.find((x) => verticalOf(x) === v.id);
@@ -319,12 +331,12 @@ export function getTodayIntelligence(archive: Archive = getArchive()): {
     if (changes.length >= 5) break;
     if (!changes.includes(s)) changes.push(s);
   }
-  const caseItem = archive.cases[0];
+  const caseItem = cases[0];
   const allCos = getCompanyDossiers();
   const company = allCos.find((d) => d.tier === 'A') ?? allCos[0];
-  const podcast = archive.podcasts[0];
-  const english = archive.english[0];
-  return { changes, caseItem, company, podcast, english };
+  const podcast = podcasts[0];
+  const englishCard = english[0];
+  return { changes, caseItem, company, podcast, english: englishCard };
 }
 
 /** 延伸权威信源：A/B 级来源中类目与本条话题 / 垂直重叠者，供深挖（不编造，仅推荐） */

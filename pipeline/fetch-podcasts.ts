@@ -1,9 +1,12 @@
 /**
  * Build-time Podcast RSS fetcher.
  * Fetches each real channel's RSS, parses latest episodes, and writes
- * src/lib/data/podcasts.episodes.json. FAILURES ARE SKIPPED — never fabricated.
+ * src/lib/data/podcasts.episodes.json and, when configured, Supabase.
+ * FAILURES ARE SKIPPED — never fabricated.
  */
+import './lib/env';
 import { PODCAST_CHANNELS } from '../src/lib/data/podcasts.registry.ts';
+import { getSupabaseAdmin } from './lib/supabase';
 import { writeFileSync } from 'node:fs';
 
 const UA =
@@ -188,6 +191,19 @@ async function main() {
     episodes,
   };
   writeFileSync('src/lib/data/podcasts.episodes.json', JSON.stringify(payload, null, 2));
+
+  if (process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY && episodes.length > 0) {
+    const sb = getSupabaseAdmin();
+    const rows = episodes.map((episode) => ({
+      id: episode.id,
+      channel_id: episode.channelId,
+      data: episode,
+    }));
+    const { error } = await sb.from('podcast_episodes').upsert(rows, { onConflict: 'id' });
+    if (error) throw error;
+    console.log(`✓ Supabase: upserted ${rows.length} podcast episodes.`);
+  }
+
   const okCount = channels.filter((c) => c.health.ok).length;
   console.log(`\nDONE: ${okCount}/${channels.length} channels fetched, ${episodes.length} episodes total.`);
 }
