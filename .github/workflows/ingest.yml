@@ -44,20 +44,6 @@ jobs:
           INGEST_BUDGET_MS: 480000
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-      - name: Refresh podcast RSS
-        run: npm run ingest:podcasts
-        timeout-minutes: 12
-        continue-on-error: true
-        env:
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-      - name: Build English corpus from real articles
-        run: npm run ingest:english
-        timeout-minutes: 6
-        continue-on-error: true
-        env:
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
       - name: Mark live sources
         run: npm run mark:live
         timeout-minutes: 3
