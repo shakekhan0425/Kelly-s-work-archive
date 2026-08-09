@@ -90,8 +90,22 @@ function sb(): SupabaseClient | null {
 }
 
 async function supabaseArchive(client: SupabaseClient): Promise<Archive> {
+  // signals 的正文体积很大；单次读取 Supabase 默认的 1000 行会触发 statement timeout。
+  // 拆成 4 个批次仍保留最新 1000 条，但避免一次查询序列化过大的 JSONB 结果。
+  const signalParts = await Promise.all(
+    [0, 250, 500, 750].map((from) =>
+      client
+        .from("signals")
+        .select("data")
+        .order("updated_at", { ascending: false })
+        .range(from, from + 249),
+    ),
+  );
+  const signalsRes = {
+    data: signalParts.flatMap((part) => part.data ?? []),
+    error: signalParts.find((part) => part.error)?.error ?? null,
+  };
   const [
-    signalsRes,
     casesRes,
     podcastsRes,
     englishRes,
@@ -102,7 +116,6 @@ async function supabaseArchive(client: SupabaseClient): Promise<Archive> {
     registryRes,
     metaRes,
   ] = await Promise.all([
-    client.from("signals").select("data"),
     client.from("cases").select("data"),
     client.from("podcasts").select("data"),
     client.from("english").select("data"),
