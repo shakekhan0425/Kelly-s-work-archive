@@ -4,6 +4,7 @@ import { formatDate, getEnglishLive, liveSource } from "@/lib/data/live";
 import { ENGLISH_BRIEFS } from "@/lib/data/english.briefs";
 
 export const metadata = { title: "商务英语 · WORK / Archive" };
+export const revalidate = 60;
 
 export default async function EnglishPage() {
   const cards = await getEnglishLive();
@@ -82,8 +83,8 @@ export default async function EnglishPage() {
         )}
       </div>
 
-      <SectionHeader eyebrow="Curated Vocabulary" title="系统化商务词卡" />
-      <p className="en-sub-note">通用商务英语整理，含句型 / 范例 / 面试应用。例句为教学示范，非引用特定文章。</p>
+      <SectionHeader eyebrow="Curated Vocabulary" title="系统化商务词卡 · 固定学习库" />
+      <p className="en-sub-note">这是固定学习库，不随每日抓取变化；实时更新内容请看上面的「实时语料」。含句型 / 范例 / 面试应用，例句为教学示范，非引用特定文章。</p>
       <div className="en-brief-grid" style={{ marginTop: 12 }}>
         {ENGLISH_BRIEFS.map((b) => {
           let h = 0;
