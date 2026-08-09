@@ -76,6 +76,7 @@ export default async function CasesPage({
 
       <CasesExplorer
         all={pageRes.items}
+        total={pageRes.total}
         topics={topics}
         scopeCounts={scopeCounts}
         current={{ topic, scope }}

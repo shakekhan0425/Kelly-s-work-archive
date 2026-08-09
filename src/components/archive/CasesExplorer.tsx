@@ -26,6 +26,7 @@ export interface CaseCurrent {
 
 export function CasesExplorer({
   all,
+  total,
   topics,
   scopeCounts,
   current,
@@ -34,6 +35,7 @@ export function CasesExplorer({
   pages,
 }: {
   all: ArchiveItem[];
+  total: number;
   topics: CaseTopic[];
   scopeCounts: CaseFilterCount[];
   current: CaseCurrent;
@@ -52,7 +54,7 @@ export function CasesExplorer({
           href="/cases"
           className={`filter-chip ${!topic && !scope ? "is-on" : ""}`}
         >
-          全部 {all.length}
+          全部 {total}
         </Link>
         <span className="filter-label" style={{ marginLeft: 4 }}>内容领域</span>
         {scopeCounts.map((d) => (
