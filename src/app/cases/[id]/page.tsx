@@ -86,7 +86,7 @@ export default async function CaseDetail({ params }: { params: Promise<{ id: str
               fallback={{
                 source: item.sourceName,
                 category: item.category,
-                date: item.publishedAt ? item.publishedAt.slice(0, 10).replace(/-/g, ".") : undefined,
+                date: item.publishedAt ? formatDate(item.publishedAt) : undefined,
               }}
             />
           ) : null}

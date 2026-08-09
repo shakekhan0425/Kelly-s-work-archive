@@ -19,6 +19,17 @@ const HERO_IMAGES = [
 ];
 const DISPLAY_TIME_ZONE = "Asia/Shanghai";
 
+function formatDeskTime(iso: string): string {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return "";
+  return new Intl.DateTimeFormat("zh-CN", {
+    timeZone: DISPLAY_TIME_ZONE,
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).format(date);
+}
+
 function heroImage() {
   const day = Number(new Intl.DateTimeFormat("en-US", {
     timeZone: DISPLAY_TIME_ZONE,
@@ -128,7 +139,7 @@ export default async function DeskPage() {
                 <span className="ti-cat">{s.category}</span>
                 <span className="ti-headline">{s.title}</span>
                 <span className="ti-time">
-                  {s.publishedAt ? s.publishedAt.slice(11, 16) : ""}
+                  {s.publishedAt ? formatDeskTime(s.publishedAt) : ""}
                 </span>
                 <ArrowRight size={14} className="ti-arrow" />
               </Link>

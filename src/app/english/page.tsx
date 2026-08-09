@@ -1,6 +1,6 @@
 import { ArchiveShell } from "@/components/archive/ArchiveShell";
 import { SectionHeader } from "@/components/archive/SectionHeader";
-import { getEnglishLive, liveSource } from "@/lib/data/live";
+import { formatDate, getEnglishLive, liveSource } from "@/lib/data/live";
 import { ENGLISH_BRIEFS } from "@/lib/data/english.briefs";
 
 export const metadata = { title: "商务英语 · WORK / Archive" };
@@ -67,7 +67,7 @@ export default async function EnglishPage() {
                   {e.publishedAt ? (
                     <>
                       <span className="sep">/</span>
-                      <span>{e.publishedAt.slice(0, 10)}</span>
+                      <span>{formatDate(e.publishedAt)}</span>
                     </>
                   ) : null}
                 </div>
