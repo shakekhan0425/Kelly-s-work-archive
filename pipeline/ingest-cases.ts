@@ -10,7 +10,8 @@ import { createHash } from "node:crypto";
 import { getSupabaseAdmin } from "./lib/supabase";
 import { SOURCE_REGISTRY } from "../src/lib/data/sources.registry";
 import type { ArchiveItem, SourceIntel } from "../src/lib/data/types";
-import { slice, isCli, type RunOpts, type RunReport } from "./lib/ingest-shared";
+import { cleanText, cleanTitle } from "../src/lib/data/content-clean";
+import { extractBody, slice, isCli, type RunOpts, type RunReport } from "./lib/ingest-shared";
 
 const FETCH_TIMEOUT = 18_000;
 const MAX_PER_SITE = 12;
@@ -40,12 +41,6 @@ async function fetchText(url: string): Promise<string> {
 function meta(h: string, key: string): string {
   return (h.match(new RegExp(`(?:property|name)="${key}"[^>]+content="([^"]+)"`, "i")) || [])[1] || "";
 }
-function extractBody(h: string): string {
-  const ps = [...h.matchAll(/<p[^>]*>([\s\S]*?)<\/p>/gi)]
-    .map((m) => m[1].replace(/<[^>]+>/g, " ").replace(/&[a-z]+;/gi, " ").replace(/\s+/g, " ").trim())
-    .filter((x) => x.length > 20);
-  return ps.join("\n\n");
-}
 function wordCount(t: string): number {
   return (t.match(/[\u4e00-\u9fa5]/g) || []).length;
 }
@@ -68,10 +63,10 @@ async function scrapeSite(cfg: SiteCfg): Promise<{ n: number; skip: number }> {
   for (const url of links) {
     try {
       const h = await fetchText(url);
-      const title = (meta(h, "og:title") || (h.match(/<title>([\s\S]*?)<\/title>/i) || [])[1] || "").replace(/[|_|-].*$/, "").trim();
+      const title = cleanTitle(meta(h, "og:title") || (h.match(/<title>([\s\S]*?)<\/title>/i) || [])[1] || "").replace(/[|_|-].*$/, "").trim();
       const hero = meta(h, "og:image");
       const body = extractBody(h);
-      const text = body || meta(h, "og:description") || meta(h, "description") || "";
+      const text = body || cleanText(meta(h, "og:description") || meta(h, "description") || "");
       if (text.length < 200 || !title) { skip++; continue; }
       const wc = wordCount(text);
       const brands = [...new Set(BRAND_KW.filter((b) => (title + body).includes(b)))];
@@ -79,7 +74,7 @@ async function scrapeSite(cfg: SiteCfg): Promise<{ n: number; skip: number }> {
       const { data: ex } = await getSupabaseAdmin().from("cases").select("id").eq("id", id).maybeSingle();
       if (ex) { skip++; continue; }
       const item: ArchiveItem = {
-        id, slug: slugify(title), title, url, summary: (meta(h, "og:description") || text.slice(0, 140)).slice(0, 280),
+        id, slug: slugify(title), title, url, summary: cleanText(meta(h, "og:description") || text.slice(0, 140)).slice(0, 280),
         hero, byline: "", publishedAt: new Date().toISOString(), sourceId: cfg.id, sourceName, sourceSite: hostOf(url),
         lang: "zh", category: cfg.category, topics: brands.length ? ["case", ...brands.slice(0, 2)] : ["case"], brands,
         blocks: text.split(/\n{2,}/).filter(Boolean).map((p) => ({ type: "para" as const, text: p })),

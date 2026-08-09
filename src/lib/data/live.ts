@@ -5,6 +5,7 @@ import { PUBLIC_SUPABASE_URL } from "@/lib/supabase/config";
 import { SOURCE_REGISTRY } from "./sources.registry";
 import { COMPANY_REGISTRY } from "./companies.registry";
 import { PODCAST_CHANNELS } from "./podcasts.registry";
+import { cleanArchive, cleanArchiveItem, cleanEnglishCard, cleanPodcastEpisode } from "./content-clean";
 import type {
   Archive,
   ArchiveItem,
@@ -19,6 +20,7 @@ import type {
   PodcastItem,
   PodcastShow,
   SourceRef,
+  SourceIntel,
   CaseStudy,
 } from "./types";
 import {
@@ -35,17 +37,17 @@ import {
   getCaseStudy,
   buildContext,
   buildBusinessEnglish,
-  getRelated,
+  getRelated as getRelatedFrom,
   getRelatedCompanies,
-  getRelatedCases,
-  getRelatedPodcasts,
-  getRelatedEnglish,
-  getRelatedSources,
+  getRelatedCases as getRelatedCasesFrom,
+  getRelatedPodcasts as getRelatedPodcastsFrom,
+  getRelatedEnglish as getRelatedEnglishFrom,
+  getRelatedSources as getRelatedSourcesFrom,
   getCompanyDossier,
   getCompanyGroups,
-  getSourceIntel,
+  getSourceIntel as getSourceIntelFrom,
   getSourceById,
-  getSourceGroups,
+  getSourceGroups as getSourceGroupsFrom,
   searchArchive,
   getTodayIntelligence,
   getTodayEdit,
@@ -70,7 +72,15 @@ let source: "supabase" | "json" | null = null;
 const CACHE_TTL_MS = 5 * 60 * 1000;
 
 function jsonArchive(): Archive {
-  return getLocalArchive();
+  return cleanArchive(getLocalArchive());
+}
+
+function newestFirst<T extends { publishedAt?: string | null }>(items: T[]): T[] {
+  return [...items].sort((a, b) => {
+    const at = a.publishedAt ? Date.parse(a.publishedAt) : 0;
+    const bt = b.publishedAt ? Date.parse(b.publishedAt) : 0;
+    return (Number.isFinite(bt) ? bt : 0) - (Number.isFinite(at) ? at : 0);
+  });
 }
 
 function sb(): SupabaseClient | null {
@@ -114,13 +124,13 @@ async function supabaseArchive(client: SupabaseClient): Promise<Archive> {
     throw new Error("Supabase 核心表读取失败: " + coreErrs.join("; "));
   }
 
-  const signals = (signalsRes.data ?? []).map((r: { data: ArchiveItem }) => r.data);
-  const cases = (casesRes.data ?? []).map((r: { data: ArchiveItem }) => r.data);
-  const podcasts = (podcastsRes.data ?? []).map((r: { data: PodcastItem }) => r.data);
-  const english = (englishRes.data ?? []).map((r: { data: EnglishCard }) => r.data);
+  const signals = newestFirst((signalsRes.data ?? []).map((r: { data: ArchiveItem }) => cleanArchiveItem(r.data)));
+  const cases = newestFirst((casesRes.data ?? []).map((r: { data: ArchiveItem }) => cleanArchiveItem(r.data)));
+  const podcasts = newestFirst((podcastsRes.data ?? []).map((r: { data: PodcastItem }) => cleanArchiveItem(r.data)));
+  const english = newestFirst((englishRes.data ?? []).map((r: { data: EnglishCard }) => cleanEnglishCard(r.data)));
   const sources = (sourcesRes.data ?? []).map((r: { data: SourceRef }) => r.data);
   const companies = (companiesRes.data ?? []).map((r: { data: CompanyRef }) => r.data);
-  const episodes = (epiRes.data ?? []).map((r: { data: PodcastEpisode }) => r.data);
+  const episodes = newestFirst((epiRes.data ?? []).map((r: { data: PodcastEpisode }) => cleanPodcastEpisode(r.data)));
   const caseStudies = (caseRes.data ?? []).map((r: { data: CaseStudy }) => r.data);
   const registry = (registryRes.data ?? []).map((r: { data: unknown }) => r.data);
 
@@ -128,7 +138,7 @@ async function supabaseArchive(client: SupabaseClient): Promise<Archive> {
 
   // 用 Supabase 数据覆盖本地注册表 / 单集 / 案例富化层
   const LIVE_COMPANY_REGISTRY = registry.length ? (registry as typeof COMPANY_REGISTRY) : COMPANY_REGISTRY;
-  const LIVE_EPISODES = episodes.length ? episodes : PODCAST_EPISODES;
+  const LIVE_EPISODES = episodes.length ? episodes : PODCAST_EPISODES.map(cleanPodcastEpisode);
   const LIVE_CASE_STUDIES = caseStudies.length ? caseStudies : CASE_STUDIES;
 
   const archive: Archive = {
@@ -270,17 +280,25 @@ export async function getPodcastEpisodesLive(channelId?: string): Promise<Podcas
 }
 
 export async function getPodcastsLive(limit?: number): Promise<PodcastItem[]> {
-  const list = (await getArchiveLive()).podcasts;
+  const list = newestFirst((await getArchiveLive()).podcasts);
   return limit ? list.slice(0, limit) : list;
 }
 
 export async function getEnglishLive(limit?: number): Promise<EnglishCard[]> {
-  const list = (await getArchiveLive()).english;
+  const list = newestFirst((await getArchiveLive()).english);
   return limit ? list.slice(0, limit) : list;
 }
 
 export async function getSourcesLive(): Promise<SourceRef[]> {
   return (await getArchiveLive()).sources;
+}
+
+export async function getSourceIntelLive(group?: Parameters<typeof getSourceIntelFrom>[0]) {
+  return getSourceIntelFrom(group, await getArchiveLive());
+}
+
+export async function getSourceGroupsLive() {
+  return getSourceGroupsFrom(await getArchiveLive());
 }
 
 export async function getVerticalsLive() {
@@ -357,6 +375,38 @@ export function getCaseStudyLive(id: string): CaseStudy | undefined {
   return liveOverrides.caseStudies.find((c) => c.id === id);
 }
 
+function currentArchive(): Archive {
+  return cache ?? jsonArchive();
+}
+
+export function getRelated(item: ArchiveItem, limit = 4): ArchiveItem[] {
+  return getRelatedFrom(item, limit, currentArchive());
+}
+
+export function getRelatedCases(item: ArchiveItem, limit = 4): ArchiveItem[] {
+  return getRelatedCasesFrom(item, limit, currentArchive());
+}
+
+export function getRelatedPodcasts(item: ArchiveItem, limit = 3): PodcastEpisode[] {
+  return getRelatedPodcastsFrom(item, limit, liveOverrides.episodes);
+}
+
+export function getRelatedEnglish(item: ArchiveItem, limit = 2): EnglishCard[] {
+  return getRelatedEnglishFrom(item, limit, currentArchive());
+}
+
+export function getRelatedSources(item: ArchiveItem, limit = 6): SourceIntel[] {
+  return getRelatedSourcesFrom(item, limit, currentArchive());
+}
+
+export function getSourceIntel(group?: Parameters<typeof getSourceIntelFrom>[0]) {
+  return getSourceIntelFrom(group, currentArchive());
+}
+
+export function getSourceGroups() {
+  return getSourceGroupsFrom(currentArchive());
+}
+
 /* ─────────── 复用 archive.ts 的纯派生（详情页结构化卡片） ─────────── */
 export {
   buildKnowledgeCard,
@@ -364,17 +414,10 @@ export {
   getCaseStudy,
   buildContext,
   buildBusinessEnglish,
-  getRelated,
   getRelatedCompanies,
-  getRelatedCases,
-  getRelatedPodcasts,
-  getRelatedEnglish,
-  getRelatedSources,
   getCompanyDossier,
   getCompanyGroups,
-  getSourceIntel,
   getSourceById,
-  getSourceGroups,
   getKnowledgeCard,
   getPodcastIntel,
   getTierACaseCount,

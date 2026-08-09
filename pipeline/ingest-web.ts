@@ -10,6 +10,7 @@ import { createHash } from "node:crypto";
 import { extract } from "@extractus/article-extractor";
 import { SOURCE_REGISTRY } from "../src/lib/data/sources.registry";
 import type { ArchiveItem, SourceIntel } from "../src/lib/data/types";
+import { cleanText, cleanTitle } from "../src/lib/data/content-clean";
 import {
   sb, fetchText, stripTags, classify, wordCountZh, buildBlocks, slugify, draftKnowledge, hostOf, extractBody, meta,
   feedCandidates, fetchFeedXml, slice, isCli, withTimeout,
@@ -104,7 +105,7 @@ async function ingestRss(reg: SourceIntel): Promise<{ n: number; skip: number; e
       it.enclosure?.url ||
       ""
     ).trim();
-    const title = (it.title || "").trim();
+    const title = cleanTitle(it.title || "");
     if (!title || !url) { skip++; continue; }
     const id = "sig_" + createHash("sha256").update(url).digest("hex").slice(0, 20);
     const { data: ex } = await sb().from("signals").select("id").eq("id", id).maybeSingle();
@@ -134,7 +135,7 @@ async function ingestRss(reg: SourceIntel): Promise<{ n: number; skip: number; e
     const { signal_category, content_scope, topics } = classify(title, text);
     const wc = wordCountZh(text);
     const item: ArchiveItem = {
-      id, slug: slugify(title), title, url, summary: (it.summary ? stripTags(it.summary) : text.slice(0, 140)).slice(0, 280),
+      id, slug: slugify(title), title, url, summary: cleanText(it.summary ? stripTags(it.summary) : text.slice(0, 140)).slice(0, 280),
       hero, byline: it.creator || "", publishedAt: it.isoDate || it.pubDate || new Date().toISOString(),
       sourceId: reg.id, sourceName: reg.name, sourceSite: hostOf(url), lang,
       category: reg.category, topics, brands: [], blocks: buildBlocks(text),

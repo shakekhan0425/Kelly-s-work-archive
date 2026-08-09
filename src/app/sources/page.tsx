@@ -1,6 +1,6 @@
 import { ArchiveShell } from "@/components/archive/ArchiveShell";
 import { WechatSourcesPanel } from "@/components/archive/WechatSourcesPanel";
-import { getSourceGroups, getSourceIntel, liveSource } from "@/lib/data/live";
+import { getSourceGroupsLive, getSourceIntelLive, liveSource } from "@/lib/data/live";
 import type { SourceGroup, SourceIntel } from "@/lib/data/types";
 
 /** 权重顺序：Marketing / Brand / Luxury / Consumer 最高，纯技术最低。 */
@@ -37,7 +37,7 @@ function accessLabel(m: string): string {
 export const metadata = { title: "来源体系 · Source Intelligence" };
 
 export default async function SourcesPage() {
-  const [groups, all] = await Promise.all([Promise.resolve(getSourceGroups()), Promise.resolve(getSourceIntel())]);
+  const [groups, all] = await Promise.all([getSourceGroupsLive(), getSourceIntelLive()]);
   const liveCount = all.filter((s) => s.live).length;
   const aCount = all.filter((s) => s.authority === "A").length;
   const src = liveSource();

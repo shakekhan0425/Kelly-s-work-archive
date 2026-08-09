@@ -8,6 +8,7 @@ import './lib/env';
 import { PODCAST_CHANNELS } from '../src/lib/data/podcasts.registry.ts';
 import { getSupabaseAdmin } from './lib/supabase';
 import { writeFileSync } from 'node:fs';
+import { cleanText, cleanTitle } from '../src/lib/data/content-clean';
 
 const UA =
   'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36';
@@ -94,10 +95,10 @@ function parseFeed(xml: string, channelId: string, show: string, showImage: stri
           channelId,
           show,
           showImage,
-          title: decode(title),
+          title: cleanTitle(title),
           link: link || fallbackLink,
           publishedAt: pub ? new Date(pub).toISOString() : '',
-          summary: summary.slice(0, 700),
+          summary: cleanText(summary).slice(0, 700),
           duration: '',
           audio: '',
         });
@@ -121,10 +122,10 @@ function parseFeed(xml: string, channelId: string, show: string, showImage: stri
         channelId,
         show,
         showImage: img || showImage,
-        title: decode(title),
+        title: cleanTitle(title),
         link: link || fallbackLink,
         publishedAt: pub ? new Date(pub).toISOString() : '',
-        summary: desc.slice(0, 700),
+        summary: cleanText(desc).slice(0, 700),
         duration: dur,
         audio: attr(b, 'enclosure', 'url'),
       });

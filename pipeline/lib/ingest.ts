@@ -18,6 +18,7 @@ import { analyzeArticle, classifyArticle } from "./analyze";
 import type { ArticleRecord, Block } from "./types";
 import { SOURCE_REGISTRY } from "../../src/lib/data/sources.registry";
 import type { ArchiveItem, SourceIntel } from "../../src/lib/data/types";
+import { cleanArchiveItem, cleanText } from "../../src/lib/data/content-clean";
 
 const FETCH_TIMEOUT = 15_000;
 
@@ -47,7 +48,7 @@ function toArchiveItem(r: ArticleRecord): ArchiveItem {
   const lang = r.language || "zh";
   const wc = r.word_count || 0;
   const blocks = (Array.isArray(r.blocks) ? r.blocks : []) as Block[];
-  return {
+  return cleanArchiveItem({
     id: r.id,
     slug: slugify(r.title),
     title: r.title,
@@ -68,7 +69,7 @@ function toArchiveItem(r: ArticleRecord): ArchiveItem {
     readMinutes: Math.max(1, Math.round(wc / (lang === "zh" ? 300 : 220))),
     thin: !!r.thin || wc < 800,
     knowledge: r.knowledge as ArchiveItem["knowledge"],
-  };
+  });
 }
 
 function toRow(r: ArticleRecord) {
@@ -123,22 +124,12 @@ export function parseFeed(xml: string, sourceHome?: string): FeedItem[] {
 }
 
 function stripTags(s: string): string {
-  return s.replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, "$1").replace(/<[^>]+>/g, " ");
+  return cleanText(s.replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, "$1"));
 }
 
 /** 把 feed 自带的 HTML 全文转成纯文本（去标签、压缩空白、解码实体）。 */
 export function htmlToText(html: string): string {
-  return stripTags(html)
-    .replace(/&nbsp;/g, " ")
-    .replace(/&amp;/g, "&")
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;|&apos;/g, "'")
-    .replace(/&[a-z]+;/gi, " ")
-    .replace(/[ \t]+/g, " ")
-    .replace(/\n{2,}/g, "\n\n")
-    .trim();
+  return cleanText(html);
 }
 function absoluteUrl(u: string, base?: string): string {
   if (/^https?:\/\//.test(u)) return u;

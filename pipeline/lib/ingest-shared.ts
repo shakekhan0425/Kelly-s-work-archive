@@ -6,6 +6,7 @@ import "./env";
 import { createClient } from "@supabase/supabase-js";
 import { SOURCE_REGISTRY } from "../../src/lib/data/sources.registry";
 import type { ArchiveItem, Block, SourceIntel } from "../../src/lib/data/types";
+import { cleanText } from "../../src/lib/data/content-clean";
 
 export function sb() {
   return createClient((process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL)!, process.env.SUPABASE_SERVICE_ROLE_KEY!, {
@@ -119,24 +120,12 @@ export function meta(h: string, key: string): string {
 /** 取 <p> 正文段落（article-extractor 对中文站失效时的兜底）。 */
 export function extractBody(h: string, max = 40): string {
   const ps = [...h.matchAll(/<p[^>]*>([\s\S]*?)<\/p>/gi)]
-    .map((m) => m[1].replace(/<[^>]+>/g, " ").replace(/&[a-z]+;/gi, " ").replace(/\s+/g, " ").trim())
+    .map((m) => cleanText(m[1]))
     .filter((x) => x.length > 20);
   return ps.slice(0, max).join("\n\n");
 }
 export function stripTags(s: string): string {
-  return s
-    .replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, "$1")
-    .replace(/<[^>]+>/g, " ")
-    .replace(/&nbsp;/g, " ")
-    .replace(/&amp;/g, "&")
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;|&apos;/g, "'")
-    .replace(/&[a-z]+;/gi, " ")
-    .replace(/[ \t]+/g, " ")
-    .replace(/\n{2,}/g, "\n\n")
-    .trim();
+  return cleanText(s.replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, "$1"));
 }
 
 /* ── 规则分类（不调 LLM） ── */

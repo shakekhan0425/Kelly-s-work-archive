@@ -5,6 +5,7 @@
 import './lib/env';
 import { createHash } from 'node:crypto';
 import { getSupabaseAdmin } from './lib/supabase';
+import { cleanText, cleanTitle } from '../src/lib/data/content-clean';
 
 const TERMS = [
   'brand', 'branding', 'marketing', 'campaign', 'consumer', 'luxury', 'revenue',
@@ -36,7 +37,7 @@ function hash(input: string): string {
 function paragraphs(item: SignalData): string[] {
   return (item.blocks ?? [])
     .filter((block) => block.type === 'para' && typeof block.text === 'string')
-    .map((block) => block.text!.trim())
+    .map((block) => cleanText(block.text!))
     .filter(Boolean);
 }
 
@@ -73,8 +74,8 @@ async function main() {
         id: `english_${hash(`${item.id}|${term}`)}`,
         sentence,
         terms: [term],
-        sourceTitle: item.title,
-        sourceName: item.sourceName,
+      sourceTitle: cleanTitle(item.title),
+      sourceName: cleanText(item.sourceName),
         url: item.url,
         publishedAt: item.publishedAt ?? '',
       };

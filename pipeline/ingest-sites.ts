@@ -10,6 +10,7 @@ import "./lib/env";
 import { createHash } from "node:crypto";
 import { SOURCE_REGISTRY } from "../src/lib/data/sources.registry";
 import type { ArchiveItem, SourceIntel } from "../src/lib/data/types";
+import { cleanText, cleanTitle } from "../src/lib/data/content-clean";
 import {
   sb, regById, fetchText, abs, meta, extractBody, classify, wordCountZh, buildBlocks, slugify, draftKnowledge, tagBrands, hostOf,
   slice, isCli, type RunOpts, type RunReport,
@@ -44,12 +45,12 @@ async function scrape(cfg: SiteCfg): Promise<{ n: number; skip: number; err?: st
   for (const url of links) {
     try {
       const h = await fetchText(url);
-      const title = (meta(h, "og:title") || (h.match(/<title>([\s\S]*?)<\/title>/i) || [])[1] || "")
+      const title = cleanTitle(meta(h, "og:title") || (h.match(/<title>([\s\S]*?)<\/title>/i) || [])[1] || "")
         .replace(/\s*[-|_|｜].*$/, "")
         .trim();
       const hero = meta(h, "og:image");
       const body = extractBody(h);
-      const text = body || meta(h, "og:description") || meta(h, "description") || "";
+      const text = body || cleanText(meta(h, "og:description") || meta(h, "description") || "");
       if (text.length < 200 || !title) { skip++; continue; }
       const wc = wordCountZh(text);
       const brands = tagBrands(title + body);
@@ -58,7 +59,7 @@ async function scrape(cfg: SiteCfg): Promise<{ n: number; skip: number; err?: st
       if (ex) { skip++; continue; }
       const { signal_category, content_scope, topics } = classify(title, text);
       const item: ArchiveItem = {
-        id, slug: slugify(title), title, url, summary: (meta(h, "og:description") || text.slice(0, 140)).slice(0, 280),
+        id, slug: slugify(title), title, url, summary: cleanText(meta(h, "og:description") || text.slice(0, 140)).slice(0, 280),
         hero, byline: "", publishedAt: new Date().toISOString(), sourceId: cfg.id, sourceName,
         sourceSite: hostOf(url), lang: "zh", category: cfg.category,
         topics: topics.length ? topics : ["marketing"], brands,

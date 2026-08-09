@@ -1,5 +1,6 @@
 import type { Archive } from "./types";
 import archiveData from "../../../data/archive.json";
+import { cleanArchive } from "./content-clean";
 
 export function getLocalArchive(): Archive {
   const parsed = archiveData as Archive;
@@ -9,5 +10,5 @@ export function getLocalArchive(): Archive {
     if (!item.thin && (!item.blocks || item.blocks.length === 0)) item.thin = true;
   }
   parsed.podcastShows = parsed.podcastShows ?? parsed.podcasts;
-  return parsed;
+  return cleanArchive(parsed);
 }
