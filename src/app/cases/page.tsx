@@ -5,7 +5,7 @@ import {
   type CaseTopic,
   type CaseFilterCount,
 } from "@/components/archive/CasesExplorer";
-import { getCasesLive, getTopicsLive, paginate, liveSource } from "@/lib/data/live";
+import { getCasesLive, getTopicsForItems, paginate, liveSource } from "@/lib/data/live";
 import { contentScopeOf, CONTENT_SCOPE } from "@/lib/data/content-scope";
 
 export const metadata = { title: "品牌案例库 · WORK / Archive" };
@@ -22,8 +22,8 @@ export default async function CasesPage({
   const scope = one("s");
   const page = Math.max(1, parseInt(one("p") || "1", 10) || 1);
 
-  const [list, topicsRaw] = await Promise.all([getCasesLive(), getTopicsLive()]);
-  const topics: CaseTopic[] = topicsRaw.slice(0, 14).map((t) => ({
+  const list = await getCasesLive();
+  const topics: CaseTopic[] = getTopicsForItems(list, 14).map((t) => ({
     name: t.name,
     count: t.count,
   }));

@@ -42,7 +42,7 @@ export function decodeHtmlEntities(value: string): string {
 }
 
 function cutArtifacts(value: string): string {
-  const artifact = /(?:el-pagination|btn-next|btn-prev|is-background|shouldInjectCss|document\.getElementsByTagName|webpackJsonp|__NEXT_DATA__)/i;
+  const artifact = /(?:el-pagination|btn-next|btn-prev|is-background|shouldInjectCss|document\.getElementsByTagName|webpackJsonp|__NEXT_DATA__|blogherads\.|adq\.push|googletag\.|defineSlot\s*\(|setTargeting\s*\(|setSubAdUnitPath\s*\(|connatix|pmcCnx|pmc\.harmony|playerId\s*:|playlistId\s*:)/i;
   const index = value.search(artifact);
   return index >= 0 ? value.slice(0, index).replace(/[\s"'`})\].:;,\-]+$/g, '') : value;
 }
@@ -97,7 +97,13 @@ export function cleanArchiveItem<T extends ArchiveItem | PodcastItem>(item: T): 
     category: cleanText(item.category),
     topics: (Array.isArray(item.topics) ? item.topics : []).map((topic) => cleanText(topic)).filter(Boolean),
     brands: (Array.isArray(item.brands) ? item.brands : []).map((brand) => cleanText(brand)).filter(Boolean),
-    blocks: rawBlocks.filter((block): block is Block => Boolean(block && typeof block === 'object' && 'type' in block)).map(cleanBlock),
+    blocks: rawBlocks
+      .filter((block): block is Block => Boolean(block && typeof block === 'object' && 'type' in block))
+      .map(cleanBlock)
+      .filter((block) => {
+        if (block.type === 'list') return block.items.length > 0;
+        return 'text' in block && Boolean(block.text);
+      }),
   } as T;
 }
 

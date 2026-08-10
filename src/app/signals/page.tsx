@@ -8,7 +8,7 @@ import {
 import {
   getSignalsLive,
   getVerticalsLive,
-  getTopicsLive,
+  getTopicsForItems,
   verticalOf,
   paginate,
   liveSource,
@@ -33,12 +33,12 @@ export default async function SignalsPage({
   const scope = one("s");
   const page = Math.max(1, parseInt(one("p") || "1", 10) || 1);
 
-  const [signals, verticals, topics] = await Promise.all([
+  const [signals, verticals] = await Promise.all([
     getSignalsLive(),
     getVerticalsLive(),
-    getTopicsLive(),
   ]);
   const all: SignalItem[] = signals.map((s) => ({ ...s, vertical: verticalOf(s) }));
+  const topics = getTopicsForItems(all);
 
   // 服务端筛选
   let list = all;

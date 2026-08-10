@@ -165,12 +165,27 @@ export function getSources(): SourceRef[] {
 }
 
 export function getTopics(): { name: string; count: number }[] {
-  return getArchive().topics;
+  return getTopicsForItems(getArchive().signals);
 }
 
-/** 纯函数：从给定 Archive 取话题（live.ts 复用） */
+/** 从当前列表实时统计话题，避免使用过期的 meta 快照导致点击后空列表。 */
+export function getTopicsForItems(items: ArchiveItem[], limit = 40): { name: string; count: number }[] {
+  const counts = new Map<string, number>();
+  for (const item of items) {
+    for (const raw of item.topics ?? []) {
+      const name = raw.trim();
+      if (name) counts.set(name, (counts.get(name) ?? 0) + 1);
+    }
+  }
+  return [...counts.entries()]
+    .map(([name, count]) => ({ name, count }))
+    .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name, 'zh-CN'))
+    .slice(0, limit);
+}
+
+/** 兼容旧调用：live.ts 默认按当前 signals 统计，而不是读历史 meta。 */
 export function getTopicsFrom(a: Archive): { name: string; count: number }[] {
-  return a.topics;
+  return getTopicsForItems(a.signals);
 }
 
 export function getCompanies(limit?: number): CompanyRef[] {

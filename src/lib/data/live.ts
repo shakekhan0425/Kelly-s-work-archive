@@ -398,7 +398,7 @@ export async function getItemByIdLive(id: string): Promise<ArchiveItem | Podcast
     (cas.data?.data as ArchiveItem | undefined) ||
     (pod.data?.data as PodcastItem | undefined);
 
-  return row;
+  return row ? cleanArchiveItem(row) : undefined;
 }
 
 export async function getItemsByIdsLive(ids: string[]): Promise<ArchiveItem[]> {
@@ -447,6 +447,8 @@ export function getRelatedEnglish(item: ArchiveItem, limit = 2): EnglishCard[] {
 export function getRelatedSources(item: ArchiveItem, limit = 6): SourceIntel[] {
   return getRelatedSourcesFrom(item, limit, currentArchive());
 }
+
+export { getTopicsForItems } from "./archive";
 
 export function getSourceIntel(group?: Parameters<typeof getSourceIntelFrom>[0]) {
   return getSourceIntelFrom(group, currentArchive());
