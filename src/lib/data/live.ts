@@ -105,8 +105,21 @@ async function supabaseArchive(client: SupabaseClient): Promise<Archive> {
     data: signalParts.flatMap((part) => part.data ?? []),
     error: signalParts.find((part) => part.error)?.error ?? null,
   };
+  // 案例正文同样可能很大；拆批读取，避免某个运行实例因 JSONB 体积超时后整页回退本地。
+  const caseParts = await Promise.all(
+    [0, 50, 100].map((from) =>
+      client
+        .from("cases")
+        .select("data")
+        .order("updated_at", { ascending: false })
+        .range(from, from + 49),
+    ),
+  );
+  const casesRes = {
+    data: caseParts.flatMap((part) => part.data ?? []),
+    error: caseParts.find((part) => part.error)?.error ?? null,
+  };
   const [
-    casesRes,
     podcastsRes,
     englishRes,
     sourcesRes,
@@ -116,7 +129,6 @@ async function supabaseArchive(client: SupabaseClient): Promise<Archive> {
     registryRes,
     metaRes,
   ] = await Promise.all([
-    client.from("cases").select("data"),
     client.from("podcasts").select("data"),
     client.from("english").select("data"),
     client.from("sources").select("data"),
