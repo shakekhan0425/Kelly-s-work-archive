@@ -6,6 +6,7 @@
  */
 import './lib/env';
 import { PODCAST_CHANNELS } from '../src/lib/data/podcasts.registry.ts';
+import type { PodcastChannel } from '../src/lib/data/types.ts';
 import { getSupabaseAdmin } from './lib/supabase';
 import { writeFileSync } from 'node:fs';
 import { cleanText, cleanTitle } from '../src/lib/data/content-clean';
@@ -73,6 +74,31 @@ interface Episode {
   summary: string;
   duration: string;
   audio: string;
+}
+
+/** RSS 内容偶尔带有孤立 UTF-16 代理项，Postgres JSONB 会拒绝整批写入。 */
+function removeLoneSurrogates(value: string): string {
+  let out = '';
+  for (let i = 0; i < value.length; i += 1) {
+    const code = value.charCodeAt(i);
+    if (code >= 0xd800 && code <= 0xdbff) {
+      const next = value.charCodeAt(i + 1);
+      if (next >= 0xdc00 && next <= 0xdfff) {
+        out += value[i] + value[i + 1];
+        i += 1;
+      }
+      continue;
+    }
+    if (code >= 0xdc00 && code <= 0xdfff) continue;
+    out += value[i];
+  }
+  return out;
+}
+
+function sanitizeEpisode(episode: Episode): Episode {
+  return Object.fromEntries(
+    Object.entries(episode).map(([key, value]) => [key, removeLoneSurrogates(value)]),
+  ) as unknown as Episode;
 }
 
 function parseFeed(xml: string, channelId: string, show: string, showImage: string, fallbackLink = ''): Episode[] {
@@ -155,8 +181,9 @@ async function fetchText(url: string): Promise<string | null> {
 
 async function main() {
   const episodes: Episode[] = [];
-  const channels: any[] = [];
-  const health: Record<string, { ok: boolean; count: number; lastSuccessAt: string; source: string }> = {};
+  type ChannelHealth = { ok: boolean; count: number; lastSuccessAt: string; source: string };
+  const channels: Array<PodcastChannel & { health: ChannelHealth }> = [];
+  const health: Record<string, ChannelHealth> = {};
 
   for (const ch of PODCAST_CHANNELS) {
     let xml = await fetchText(ch.rss);
@@ -186,16 +213,24 @@ async function main() {
     }
   }
 
+  const safeEpisodes = episodes.map(sanitizeEpisode);
+  const hasSupabase = Boolean(process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY);
+  if (process.env.CI === 'true' && !hasSupabase) {
+    throw new Error('CI 环境缺少 Supabase 写入凭据，拒绝只生成本地播客数据。');
+  }
+  if (process.env.CI === 'true' && safeEpisodes.length === 0) {
+    throw new Error('CI 环境未抓到任何播客单集，拒绝用空结果覆盖线上数据。');
+  }
   const payload = {
     generatedAt: new Date().toISOString(),
     channels,
-    episodes,
+    episodes: safeEpisodes,
   };
   writeFileSync('src/lib/data/podcasts.episodes.json', JSON.stringify(payload, null, 2));
 
-  if (process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY && episodes.length > 0) {
+  if (hasSupabase && safeEpisodes.length > 0) {
     const sb = getSupabaseAdmin();
-    const rows = episodes.map((episode) => ({
+    const rows = safeEpisodes.map((episode) => ({
       id: episode.id,
       channel_id: episode.channelId,
       data: episode,
@@ -206,7 +241,7 @@ async function main() {
   }
 
   const okCount = channels.filter((c) => c.health.ok).length;
-  console.log(`\nDONE: ${okCount}/${channels.length} channels fetched, ${episodes.length} episodes total.`);
+  console.log(`\nDONE: ${okCount}/${channels.length} channels fetched, ${safeEpisodes.length} episodes total.`);
 }
 
 main().catch((e) => {

@@ -3052,6 +3052,7 @@ a:active, button:active, .btn:active, .chip:active, .icon-btn:active, .fav-btn:a
   color: inherit;
   transition: background 0.15s ease, transform 0.15s ease;
 }
+.ti-row > * { min-width: 0; }
 .ti-row:hover { background: rgba(255, 255, 255, 0.55); }
 .ti-row:hover .ti-headline { transform: translateX(2px); }
 .ti-row:hover .ti-arrow { transform: translateX(3px); color: var(--color-archive-red); }
@@ -3102,6 +3103,8 @@ a:active, button:active, .btn:active, .chip:active, .icon-btn:active, .fav-btn:a
   box-shadow: none;
   transition: transform 0.18s ease, background 0.18s ease, border-color 0.18s ease;
 }
+.rail-card,
+.rail-card-body { min-width: 0; max-width: 100%; }
 .rail-card:hover {
   transform: translateY(-2px);
   background: rgba(255, 255, 255, 0.96);
@@ -4106,11 +4109,21 @@ button:active, .btn:active, .icon-btn:active, .fav-btn:active, .chip:active, .fi
     gap: 18px;
   }
 
+  .desk-today,
+  .desk-today-grid,
+  .ti-list,
+  .desk-rail,
+  .ti-row {
+    min-width: 0;
+    max-width: 100%;
+  }
+
   .ti-row {
     grid-template-columns: 58px minmax(0, 1fr) 34px 16px;
     gap: 7px;
     min-height: 54px;
     padding: 11px 2px;
+    width: 100%;
   }
 
   .ti-cat,
@@ -4120,6 +4133,9 @@ button:active, .btn:active, .icon-btn:active, .fav-btn:active, .chip:active, .fi
 
   .ti-headline {
     font-size: 14px;
+    min-width: 0;
+    overflow-wrap: anywhere;
+    word-break: break-word;
   }
 
   .desk-rail {
@@ -4432,7 +4448,10 @@ button:active, .btn:active, .icon-btn:active, .fav-btn:active, .chip:active, .fi
 
   .mobnav-panel {
     width: min(340px, 92vw);
+    padding-bottom: env(safe-area-inset-bottom);
   }
+
+  .mobnav-link { min-height: 44px; }
 }
 
 @media (max-width: 380px) {

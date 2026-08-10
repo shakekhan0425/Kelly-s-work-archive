@@ -14,6 +14,7 @@ import {
   Settings,
   Eye,
   Headphones,
+  User,
   type LucideIcon,
 } from "lucide-react";
 
@@ -93,6 +94,7 @@ export const NAV_GROUPS: NavGroup[] = [
 
 /** 底部工具 */
 export const FOOT_NAV: NavItem[] = [
+  { href: "/profile", label: "我的", en: "Profile", icon: User },
   { href: "/settings", label: "设置", en: "Settings", icon: Settings },
 ];
 

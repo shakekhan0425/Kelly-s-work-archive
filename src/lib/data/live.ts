@@ -154,7 +154,7 @@ async function supabaseArchive(client: SupabaseClient): Promise<Archive> {
   const caseStudies = (caseRes.data ?? []).map((r: { data: CaseStudy }) => r.data);
   const registry = (registryRes.data ?? []).map((r: { data: unknown }) => r.data);
 
-  const meta = (metaRes.data?.value as { generatedAt?: string; stats?: Archive["stats"]; topics?: Archive["topics"] }) ?? {};
+  const meta = (metaRes.data?.value as { generatedAt?: string; topics?: Archive["topics"] }) ?? {};
 
   // 用 Supabase 数据覆盖本地注册表 / 单集 / 案例富化层
   const LIVE_COMPANY_REGISTRY = registry.length ? (registry as typeof COMPANY_REGISTRY) : COMPANY_REGISTRY;
@@ -163,10 +163,11 @@ async function supabaseArchive(client: SupabaseClient): Promise<Archive> {
 
   const archive: Archive = {
     generatedAt: meta.generatedAt ?? new Date().toISOString(),
-    stats: meta.stats ?? {
+    // 统计必须由当前查询结果计算。meta.stats 是历史生成快照，不能代表当前线上库。
+    stats: {
       signals: signals.length,
       cases: cases.length,
-      podcasts: podcasts.length,
+      podcasts: episodes.length,
       english: english.length,
       companies: companies.length,
       sources: sources.length,
