@@ -1457,6 +1457,73 @@ audio {
 }
 
 /* 英文卡片 */
+.en-practice-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+  gap: 14px;
+  margin-bottom: 28px;
+}
+.en-practice-card {
+  background: var(--color-paper-light);
+  border: 1px solid var(--color-line);
+  border-top: 3px solid var(--color-archive-red);
+  border-radius: 3px;
+  padding: 16px 18px;
+}
+.en-practice-topline {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.en-practice-category {
+  font-family: var(--font-condensed);
+  letter-spacing: 0.08em;
+  font-size: 11px;
+  color: var(--color-archive-red);
+}
+.en-practice-phrase {
+  font-family: var(--font-italic);
+  font-size: 20px;
+  color: var(--color-ink);
+  text-align: right;
+}
+.en-practice-meaning {
+  font-family: var(--font-serif-cn);
+  font-size: 17px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+.en-practice-use,
+.en-practice-note {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--color-ink-muted);
+  margin: 0 0 10px;
+}
+.en-practice-example {
+  border-left: 2px solid var(--color-olive);
+  padding: 8px 10px;
+  margin: 10px 0;
+  background: rgba(110, 112, 89, 0.08);
+  font-family: var(--font-italic);
+  font-size: 14px;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+}
+.en-practice-note {
+  font-size: 12px;
+  margin: 0;
+}
+.en-live-empty {
+  border: 1px dashed var(--color-line-strong);
+  background: var(--color-paper-light);
+  color: var(--color-ink-muted);
+  padding: 18px;
+  margin-top: 12px;
+  line-height: 1.6;
+}
 .en-card {
   background: var(--color-paper-light);
   border: 1px solid var(--color-line);
@@ -3958,6 +4025,7 @@ button:active, .btn:active, .icon-btn:active, .fav-btn:active, .chip:active, .fi
   .co-grid,
   .tool-grid,
   .en-grid,
+  .en-practice-grid,
   .en-brief-grid,
   .podch-grid,
   .pod-grid,
@@ -3988,6 +4056,7 @@ button:active, .btn:active, .icon-btn:active, .fav-btn:active, .chip:active, .fi
   .co-card,
   .tool-card,
   .en-card,
+  .en-practice-card,
   .en-brief-card,
   .fw-card,
   .podch-card {
@@ -4348,6 +4417,16 @@ button:active, .btn:active, .icon-btn:active, .fav-btn:active, .chip:active, .fi
 
   .en-brief-k {
     width: auto;
+  }
+
+  .en-practice-topline {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  .en-practice-phrase {
+    text-align: left;
   }
 
   .cb-row {

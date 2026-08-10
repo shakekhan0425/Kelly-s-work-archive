@@ -90,31 +90,34 @@ function sb(): SupabaseClient | null {
 }
 
 async function supabaseArchive(client: SupabaseClient): Promise<Archive> {
-  // signals 的正文体积很大；单次读取 Supabase 默认的 1000 行会触发 statement timeout。
-  // 拆成 4 个批次仍保留最新 1000 条，但避免一次查询序列化过大的 JSONB 结果。
-  const signalParts = await Promise.all(
-    [0, 250, 500, 750].map((from) =>
-      client
-        .from("signals")
-        .select("data")
-        .order("updated_at", { ascending: false })
-        .range(from, from + 249),
-    ),
-  );
+  // signals / cases 的正文体积很大；并发批量查询会把 Supabase 的连接和
+  // JSONB 序列化同时压满，偶发 statement timeout。改为小批次顺序读取，
+  // 保留最新 1000 条，优先保证每次请求都来自同一个实时快照。
+  const signalParts = [];
+  for (const from of [0, 250, 500, 750]) {
+    const part = await client
+      .from("signals")
+      .select("data")
+      .order("updated_at", { ascending: false })
+      .range(from, from + 249);
+    signalParts.push(part);
+    if ((part.data?.length ?? 0) < 250) break;
+  }
   const signalsRes = {
     data: signalParts.flatMap((part) => part.data ?? []),
     error: signalParts.find((part) => part.error)?.error ?? null,
   };
-  // 案例正文同样可能很大；拆批读取，避免某个运行实例因 JSONB 体积超时后整页回退本地。
-  const caseParts = await Promise.all(
-    [0, 50, 100].map((from) =>
-      client
-        .from("cases")
-        .select("data")
-        .order("updated_at", { ascending: false })
-        .range(from, from + 49),
-    ),
-  );
+  // 案例正文同样按批次顺序读取，避免某个运行实例因 JSONB 体积超时。
+  const caseParts = [];
+  for (const from of [0, 50, 100]) {
+    const part = await client
+      .from("cases")
+      .select("data")
+      .order("updated_at", { ascending: false })
+      .range(from, from + 49);
+    caseParts.push(part);
+    if ((part.data?.length ?? 0) < 50) break;
+  }
   const casesRes = {
     data: caseParts.flatMap((part) => part.data ?? []),
     error: caseParts.find((part) => part.error)?.error ?? null,
@@ -197,9 +200,9 @@ async function supabaseArchive(client: SupabaseClient): Promise<Archive> {
   };
 
   // 防御：Supabase 虽连通但返回空档案（常见于 RLS 静默拦截 SELECT / 表尚未灌数据），
-  // 不能当成「实时空库」——否则详情页全部 404。此时抛出，让 getArchiveLive 回退本地 JSON。
+  // 不能当成「实时空库」——否则详情页全部 404。此时抛出，禁止伪装成实时空库。
   if (signals.length === 0 && cases.length === 0 && podcasts.length === 0 && companies.length === 0) {
-    throw new Error("Supabase 返回空档案（可能 RLS 拦截 SELECT 或表尚未灌数据），回退本地 JSON");
+    throw new Error("Supabase 返回空档案（可能 RLS 拦截 SELECT 或表尚未灌数据）");
   }
 
   // 把运行期派生需要但 archive.json 未必包含的常量指向 Supabase 数据
@@ -224,22 +227,33 @@ export const liveOverrides: {
 export async function getArchiveLive(): Promise<Archive> {
   if (cache && Date.now() - cacheAt < CACHE_TTL_MS) return cache;
   const client = sb();
-  if (client) {
-    for (let attempt = 1; attempt <= 2; attempt += 1) {
-      try {
-        cache = await supabaseArchive(client);
-        cacheAt = Date.now();
-        source = "supabase";
-        return cache;
-      } catch (e) {
-        console.error(`[live] Supabase 读取失败（第 ${attempt} 次）：`, e);
-      }
+  if (!client) {
+    cache = jsonArchive();
+    cacheAt = Date.now();
+    source = "json";
+    return cache;
+  }
+
+  let lastError: unknown = null;
+  for (let attempt = 1; attempt <= 2; attempt += 1) {
+    try {
+      cache = await supabaseArchive(client);
+      cacheAt = Date.now();
+      source = "supabase";
+      return cache;
+    } catch (e) {
+      lastError = e;
+      console.error(`[live] Supabase 读取失败（第 ${attempt} 次）：`, e);
     }
   }
-  cache = jsonArchive();
-  cacheAt = Date.now();
-  source = "json";
-  return cache;
+
+  // 线上已经配置 Supabase 时，失败必须显式报错，不能回退到旧本地 JSON。
+  // 否则 Vercel 不同实例会一会显示新库、一会显示旧档案。
+  throw new Error(
+    `实时数据暂时不可用：Supabase 连续读取失败。请刷新重试，不显示旧本地数据。${
+      lastError instanceof Error ? ` ${lastError.message}` : ""
+    }`,
+  );
 }
 
 /** 当前数据源模式（供页面展示「实时 / 本地」徽标） */

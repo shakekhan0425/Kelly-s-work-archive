@@ -69,14 +69,24 @@ export function WechatSourcesPanel() {
   const [sources, setSources] = useState<WxSource[]>([]);
   const [health, setHealth] = useState<Health | null>(null);
   const [jobs, setJobs] = useState<Job[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [err, setErr] = useState<string | null>(null);
+  const [loading, setLoading] = useState(Boolean(PUBLIC_SUPABASE_URL && ANON));
+  const [err, setErr] = useState<string | null>(
+    PUBLIC_SUPABASE_URL && ANON ? null : "Supabase 客户端环境变量未配置（NEXT_PUBLIC_SUPABASE_URL / ANON_KEY）",
+  );
+  const [reloadKey, setReloadKey] = useState(0);
+
+  function refresh() {
+    setLoading(true);
+    setErr(null);
+    setReloadKey((v) => v + 1);
+  }
 
   useEffect(() => {
+    let cancelled = false;
     if (!PUBLIC_SUPABASE_URL || !ANON) {
-      setErr("Supabase 客户端环境变量未配置（NEXT_PUBLIC_SUPABASE_URL / ANON_KEY）");
-      setLoading(false);
-      return;
+      return () => {
+        cancelled = true;
+      };
     }
     const sb = createClient(PUBLIC_SUPABASE_URL, ANON, { auth: { persistSession: false } });
     (async () => {
@@ -87,22 +97,27 @@ export function WechatSourcesPanel() {
           sb
             .from("sync_jobs_public")
             .select("*")
-            .order("created_at", { ascending: false })
+            // sync_jobs_public 暴露的是 started_at，不是底层表的 created_at。
+            .order("started_at", { ascending: false })
             .limit(12),
         ]);
         if (sRes.error) throw sRes.error;
         if (hRes.error) throw hRes.error;
         if (jRes.error) throw jRes.error;
+        if (cancelled) return;
         setSources((sRes.data as WxSource[]) || []);
         setHealth((hRes.data as Health) || null);
         setJobs((jRes.data as Job[]) || []);
-      } catch (e: any) {
-        setErr(String(e?.message || e));
+      } catch (e: unknown) {
+        if (!cancelled) setErr(e instanceof Error ? e.message : String(e));
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     })();
-  }, []);
+    return () => {
+      cancelled = true;
+    };
+  }, [reloadKey]);
 
   if (loading)
     return <div style={{ padding: 16, color: "#868e96" }}>读取公众号同步状态…</div>;
@@ -113,21 +128,54 @@ export function WechatSourcesPanel() {
         <div style={{ fontSize: 12, marginTop: 6, color: "#868e96" }}>
           请确认 Supabase 表已建（0003 迁移）且 NEXT_PUBLIC 环境变量已在 Vercel 配置。
         </div>
+        <button
+          type="button"
+          className="btn"
+          style={{ marginTop: 10 }}
+          onClick={refresh}
+        >
+          重新读取
+        </button>
       </div>
     );
 
   return (
     <section style={{ marginTop: 28 }}>
-      <div style={{ display: "flex", alignItems: "baseline", gap: 10, marginBottom: 4 }}>
+      <div style={{ display: "flex", alignItems: "baseline", flexWrap: "wrap", gap: 10, marginBottom: 4 }}>
         <h2 style={{ fontSize: 20, margin: 0 }}>微信公众号 · 自动接入</h2>
         <span style={{ fontSize: 13, color: "#868e96" }}>
           Wechat2RSS 私有云 → Supabase Cron（每 8 分钟抓取 / 15 分钟处理）
         </span>
+        <button
+          type="button"
+          className="btn"
+          style={{ marginLeft: "auto", padding: "5px 9px", fontSize: 12 }}
+          onClick={refresh}
+        >
+          刷新状态
+        </button>
       </div>
       <p style={{ color: "#495057", fontSize: 14, marginTop: 0 }}>
-        来源状态由云端调度真实回写，不再显示「待接入」。登录态与订阅保存在 Wechat2RSS 持久卷，
-        微信文章经 AI 萃取后发布到 Desk / Signals。
+        这里显示的是云端真实状态。完成 Wechat2RSS 扫码和订阅后，微信文章才会进入 Supabase，
+        再经处理发布到 Desk / Signals。
       </p>
+      {health?.articles_total === 0 ? (
+        <div
+          style={{
+            margin: "10px 0 14px",
+            padding: "10px 12px",
+            border: "1px solid #f2c078",
+            borderRadius: 8,
+            background: "#fff8e8",
+            color: "#7a4b00",
+            fontSize: 13,
+            lineHeight: 1.6,
+          }}
+        >
+          当前云端状态：0 篇文章、尚未产生同步任务。12 个公众号仍处于“需登录”，不是页面加载慢；
+          需要先在 Wechat2RSS 管理端扫码登录并订阅账号。
+        </div>
+      ) : null}
 
       {/* 健康概览 */}
       <div
@@ -223,7 +271,7 @@ export function WechatSourcesPanel() {
   );
 }
 
-function Stat({ label, value, sub, small }: { label: string; value: any; sub?: string; small?: boolean }) {
+function Stat({ label, value, sub, small }: { label: string; value: string | number; sub?: string; small?: boolean }) {
   return (
     <div style={{ background: "#f8f9fa", borderRadius: 10, padding: "10px 12px" }}>
       <div style={{ fontSize: 12, color: "#868e96" }}>{label}</div>

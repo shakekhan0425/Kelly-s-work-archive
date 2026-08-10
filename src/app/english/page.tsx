@@ -3,6 +3,7 @@ import { Pager } from "@/components/archive/Pager";
 import { SectionHeader } from "@/components/archive/SectionHeader";
 import { formatDate, getEnglishLive, liveSource, paginate } from "@/lib/data/live";
 import { ENGLISH_BRIEFS } from "@/lib/data/english.briefs";
+import { ENGLISH_PRACTICE } from "@/lib/data/english.practice";
 
 export const metadata = { title: "商务英语 · WORK / Archive" };
 export const dynamic = "force-dynamic";
@@ -15,8 +16,17 @@ export default async function EnglishPage({
   const sp = await searchParams;
   const rawPage = typeof sp.p === "string" ? sp.p : "1";
   const page = Math.max(1, parseInt(rawPage, 10) || 1);
-  const pageRes = paginate(await getEnglishLive(), page);
-  const src = liveSource();
+
+  // 新闻语料是可选层；即使实时抓取暂时超时，固定学习内容也必须可用。
+  let liveError = false;
+  let pageRes = paginate<Awaited<ReturnType<typeof getEnglishLive>>[number]>([], page);
+  try {
+    pageRes = paginate(await getEnglishLive(), page);
+  } catch (e) {
+    liveError = true;
+    console.error("[english] 实时语料读取失败：", e);
+  }
+  const src = liveError ? "unknown" : liveSource();
 
   return (
     <ArchiveShell>
@@ -28,11 +38,11 @@ export default async function EnglishPage({
           action={{ href: "/desk", label: "返回今日" }}
         />
         <p className="list-dek" style={{ maxWidth: "70ch" }}>
-          从真实行业文章中提取的营销 / 商业术语句型与关键词，用于外企表达与面试英语积累。
+          先学能在会议、汇报、邮件和跨部门协作中直接使用的表达；行业新闻原句只作为可选语料，不是学习入口。
         </p>
         <p className="en-note">
-          说明：「实时语料」来自真实抓取的行业文章原句；「系统化词卡」为通用商务英语整理，
-          例句为编者撰写的教学示范，非引用特定文章，亦不编造文章链接。
+          「职场实战卡」是站内可直接学习的内容，不需要跳转外网；「系统化词卡」补充营销、品牌和面试表达；
+          「行业原句库」最后更新，适合想看真实语境时再打开。
         </p>
         {src === "supabase" ? (
           <span className="live-badge" title="数据来自 Supabase，实时更新">● 实时</span>
@@ -44,56 +54,32 @@ export default async function EnglishPage({
           >
             ● 本地档案
           </span>
+        ) : liveError ? (
+          <span className="live-badge" style={{ background: "#fff4e6", color: "#b35c00", borderColor: "#f2c078" }}>
+            实时语料暂时不可用
+          </span>
         ) : null}
       </section>
 
-      <SectionHeader eyebrow="Live Corpus" title="实时语料" />
-      <p className="en-sub-note">从真实行业文章原句抽取的商业 / 营销术语句型。点卡片右上角「读原文」可跳转来源。</p>
-      <div className="en-grid" style={{ marginTop: 12 }}>
-        {pageRes.items.length > 0 ? (
-          pageRes.items.map((e) => {
-            // 由来源名派生稳定色相，生成杂志风封面
-            let h = 0;
-            for (const c of e.sourceName) h = (h * 31 + c.charCodeAt(0)) % 360;
-            const initial = e.sourceName.trim().charAt(0).toUpperCase();
-            const bg = `linear-gradient(135deg, hsl(${h} 42% 46%), hsl(${(h + 34) % 360} 40% 32%))`;
-            return (
-              <article id={e.id} key={e.id} className="en-card">
-                <div className="en-cover" style={{ background: bg }} aria-hidden="true">
-                  <span className="en-cover-initial">{initial}</span>
-                  <span className="en-cover-tag">实时语料</span>
-                </div>
-                <div className="en-terms">
-                  {e.terms.slice(0, 4).map((t) => (
-                    <span key={t} className="en-term">
-                      {t}
-                    </span>
-                  ))}
-                </div>
-                <div className="en-sentence">"{e.sentence}"</div>
-                <div className="meta-line" style={{ marginTop: 10 }}>
-                  <span>{e.sourceName}</span>
-                  {e.publishedAt ? (
-                    <>
-                      <span className="sep">/</span>
-                      <span>{formatDate(e.publishedAt)}</span>
-                    </>
-                  ) : null}
-                </div>
-                <a className="en-read-src" href={e.url} target="_blank" rel="noreferrer">
-                  读原文 ↗
-                </a>
-              </article>
-            );
-          })
-        ) : (
-          <p className="list-dek">暂无英语条目。</p>
-        )}
+      <SectionHeader eyebrow="Practice First" title="职场商务英语 · 实战卡" />
+      <p className="en-sub-note">每张卡都包含：意思、使用场景、可直接套用的句子，以及职场语气提醒。</p>
+      <div className="en-practice-grid" style={{ marginTop: 12 }}>
+        {ENGLISH_PRACTICE.map((card) => (
+          <article id={card.id} key={card.id} className="en-practice-card">
+            <div className="en-practice-topline">
+              <span className="en-practice-category">{card.category}</span>
+              <span className="en-practice-phrase">{card.phrase}</span>
+            </div>
+            <div className="en-practice-meaning">{card.meaning}</div>
+            <p className="en-practice-use">{card.use}</p>
+            <div className="en-practice-example">“{card.example}”</div>
+            <p className="en-practice-note">{card.note}</p>
+          </article>
+        ))}
       </div>
-      <Pager basePath="/english" queryString="" page={pageRes.page} pages={pageRes.pages} />
 
       <SectionHeader eyebrow="Curated Vocabulary" title="系统化商务词卡 · 固定学习库" />
-      <p className="en-sub-note">这是固定学习库，不随每日抓取变化；实时更新内容请看上面的「实时语料」。含句型 / 范例 / 面试应用，例句为教学示范，非引用特定文章。</p>
+      <p className="en-sub-note">营销、品牌、增长和面试中的核心词汇；内容固定，不会因为每日新闻刷新而被替换。</p>
       <div className="en-brief-grid" style={{ marginTop: 12 }}>
         {ENGLISH_BRIEFS.map((b) => {
           let h = 0;
@@ -110,14 +96,13 @@ export default async function EnglishPage({
                 <span className="en-brief-zh">{b.zh}</span>
               </div>
               <p className="en-brief-def">{b.definition}</p>
-
               <div className="en-brief-row">
                 <span className="en-brief-k">句型</span>
                 <p className="en-brief-v">{b.pattern}</p>
               </div>
               <div className="en-brief-row">
                 <span className="en-brief-k">范例</span>
-                <p className="en-brief-sample">"{b.sample}"</p>
+                <p className="en-brief-sample">“{b.sample}”</p>
               </div>
               <div className="en-brief-row">
                 <span className="en-brief-k">地道表达</span>
@@ -132,6 +117,54 @@ export default async function EnglishPage({
           );
         })}
       </div>
+
+      <SectionHeader eyebrow="Optional Live Corpus" title="行业原句库 · 可选阅读" />
+      <p className="en-sub-note">
+        以下是从真实行业文章中抽取的句子，用来观察表达在语境中的用法；“读原文”只是可选，不影响站内学习。
+      </p>
+      {liveError ? (
+        <div className="en-live-empty">实时行业语料本次读取超时，固定学习内容仍可正常使用。刷新页面后重试。</div>
+      ) : (
+        <div className="en-grid" style={{ marginTop: 12 }}>
+          {pageRes.items.length > 0 ? (
+            pageRes.items.map((e) => {
+              let h = 0;
+              for (const c of e.sourceName) h = (h * 31 + c.charCodeAt(0)) % 360;
+              const initial = e.sourceName.trim().charAt(0).toUpperCase();
+              const bg = `linear-gradient(135deg, hsl(${h} 42% 46%), hsl(${(h + 34) % 360} 40% 32%))`;
+              return (
+                <article id={e.id} key={e.id} className="en-card">
+                  <div className="en-cover" style={{ background: bg }} aria-hidden="true">
+                    <span className="en-cover-initial">{initial}</span>
+                    <span className="en-cover-tag">行业原句</span>
+                  </div>
+                  <div className="en-terms">
+                    {e.terms.slice(0, 4).map((t) => (
+                      <span key={t} className="en-term">{t}</span>
+                    ))}
+                  </div>
+                  <div className="en-sentence">“{e.sentence}”</div>
+                  <div className="meta-line" style={{ marginTop: 10 }}>
+                    <span>{e.sourceName}</span>
+                    {e.publishedAt ? (
+                      <>
+                        <span className="sep">/</span>
+                        <span>{formatDate(e.publishedAt)}</span>
+                      </>
+                    ) : null}
+                  </div>
+                  <a className="en-read-src" href={e.url} target="_blank" rel="noreferrer">
+                    可选：读原文 ↗
+                  </a>
+                </article>
+              );
+            })
+          ) : (
+            <p className="list-dek">暂无行业原句。</p>
+          )}
+        </div>
+      )}
+      {!liveError ? <Pager basePath="/english" queryString="" page={pageRes.page} pages={pageRes.pages} /> : null}
     </ArchiveShell>
   );
 }
