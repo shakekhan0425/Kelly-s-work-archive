@@ -1007,6 +1007,92 @@ h3 {
   margin-right: 16px;
 }
 
+/* 详情页内容分享卡片 */
+.share-card-builder {
+  margin-top: 16px;
+}
+.share-card-launcher {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 36px;
+  padding: 7px 12px;
+  border: 1px solid var(--color-archive-red);
+  border-radius: 4px;
+  background: rgba(154, 31, 50, 0.06);
+  color: var(--color-archive-red);
+  font-family: var(--font-condensed);
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+}
+.share-card-launcher:hover {
+  background: var(--color-archive-red);
+  color: var(--color-paper-light);
+}
+.share-card-panel {
+  max-width: 760px;
+  margin-top: 12px;
+  padding: 14px;
+  border: 1px solid var(--color-line-strong);
+  border-radius: 5px;
+  background: var(--color-paper-light);
+  box-shadow: 0 8px 24px rgba(45, 28, 24, 0.08);
+}
+.share-card-panel-head,
+.share-card-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.share-card-panel-head {
+  margin-bottom: 10px;
+}
+.share-card-panel-head strong {
+  display: block;
+  margin-top: 3px;
+  font-family: var(--font-serif-cn);
+  font-size: 14px;
+}
+.share-card-kicker,
+.en-daily-kicker {
+  font-family: var(--font-condensed);
+  font-size: 10px;
+  letter-spacing: 0.13em;
+  color: var(--color-archive-red);
+}
+.share-card-close {
+  border: 0;
+  background: transparent;
+  color: var(--color-ink-muted);
+  font-size: 12px;
+  cursor: pointer;
+}
+.share-card-close:hover {
+  color: var(--color-archive-red);
+}
+.share-card-output {
+  width: 100%;
+  min-height: 330px;
+  resize: vertical;
+  padding: 12px;
+  border: 1px solid var(--color-line);
+  border-radius: 4px;
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-serif-cn);
+  font-size: 13px;
+  line-height: 1.7;
+}
+.share-card-foot {
+  align-items: flex-end;
+  margin-top: 10px;
+  color: var(--color-ink-muted);
+  font-size: 11px;
+  line-height: 1.5;
+}
+
 /* 主图 */
 .read-hero {
   margin: 0 0 34px;
@@ -1642,7 +1728,8 @@ audio {
 }
 .en-phrase-head {
   display: flex;
-  align-items: baseline;
+  align-items: flex-start;
+  justify-content: space-between;
   flex-wrap: wrap;
   gap: 7px;
   margin-bottom: 5px;
@@ -1657,6 +1744,83 @@ audio {
   color: var(--color-ink-muted);
   font-family: var(--font-serif-cn);
   font-size: 13px;
+}
+.en-copy-btn {
+  flex: none;
+  border: 1px solid var(--color-line-strong);
+  border-radius: 3px;
+  padding: 4px 7px;
+  background: transparent;
+  color: var(--color-ink-muted);
+  font-size: 11px;
+  cursor: pointer;
+}
+.en-copy-btn:hover {
+  border-color: var(--color-archive-red);
+  color: var(--color-archive-red);
+}
+.en-phrase-card.is-compact {
+  padding: 12px;
+}
+.en-phrase-card.is-compact .en-phrase {
+  font-size: 16px;
+}
+.en-phrase-card.is-compact .en-phrase-meaning {
+  font-size: 12px;
+}
+.en-daily-practice {
+  margin: 18px 0 24px;
+  padding: 16px;
+  border: 1px solid var(--color-line-strong);
+  border-radius: 5px;
+  background: linear-gradient(135deg, rgba(154, 31, 50, 0.05), rgba(110, 112, 89, 0.08));
+}
+.en-daily-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 12px;
+}
+.en-daily-head h2 {
+  margin: 4px 0 0;
+  font-family: var(--font-serif-cn);
+  font-size: 22px;
+}
+.en-daily-note {
+  color: var(--color-ink-muted);
+  font-size: 12px;
+}
+.en-daily-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 9px;
+}
+.en-workflow {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 10px 10px 2px;
+  padding: 10px 12px;
+  border-left: 2px solid var(--color-olive);
+  background: rgba(110, 112, 89, 0.07);
+}
+.en-workflow-label {
+  flex: none;
+  color: var(--color-archive-red);
+  font-family: var(--font-condensed);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+}
+.en-workflow ol {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+  margin: 0;
+  padding-left: 18px;
+  color: var(--color-ink-muted);
+  font-size: 12px;
+  line-height: 1.55;
 }
 .en-phrase-scenario,
 .en-phrase-tip {
@@ -4608,6 +4772,39 @@ button:active, .btn:active, .icon-btn:active, .fav-btn:active, .chip:active, .fi
     display: grid;
     grid-template-columns: 56px minmax(0, 1fr);
     gap: 8px;
+  }
+
+  .share-card-launcher {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .share-card-panel-head,
+  .share-card-foot,
+  .en-daily-head {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .share-card-foot .btn {
+    width: 100%;
+  }
+
+  .share-card-output {
+    min-height: 280px;
+  }
+
+  .en-daily-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .en-workflow {
+    display: block;
+  }
+
+  .en-workflow-label {
+    display: block;
+    margin-bottom: 5px;
   }
 
   .en-brief-k {

@@ -1,9 +1,10 @@
 import { ArchiveShell } from "@/components/archive/ArchiveShell";
 import { Pager } from "@/components/archive/Pager";
 import { SectionHeader } from "@/components/archive/SectionHeader";
+import EnglishPracticeCard from "@/components/archive/EnglishPracticeCard";
 import { formatDate, getEnglishLive, liveSource, paginate } from "@/lib/data/live";
 import { ENGLISH_BRIEFS } from "@/lib/data/english.briefs";
-import { ENGLISH_PRACTICE_MODULES } from "@/lib/data/english.practice";
+import { ENGLISH_PRACTICE_MODULES, PRACTICE_WORKFLOWS } from "@/lib/data/english.practice";
 
 export const metadata = { title: "商务英语 · WORK / Archive" };
 export const dynamic = "force-dynamic";
@@ -22,6 +23,19 @@ export default async function EnglishPage({
   const rawPage = typeof sp.p === "string" ? sp.p : "1";
   const page = Math.max(1, parseInt(rawPage, 10) || 1);
   const practiceTotal = ENGLISH_PRACTICE_MODULES.reduce((sum, module) => sum + module.phrases.length, 0);
+  const practicePool = ENGLISH_PRACTICE_MODULES.flatMap((module) =>
+    module.phrases.map((item) => ({ moduleTitle: module.title, item })),
+  );
+  const dayOfMonth = Number(new Intl.DateTimeFormat("en-US", {
+    timeZone: "Asia/Shanghai",
+    day: "numeric",
+  }).format(new Date()));
+  const practiceOffset = practicePool.length ? ((dayOfMonth - 1) * 3) % practicePool.length : 0;
+  const todayPractice = practicePool.length
+    ? Array.from({ length: Math.min(3, practicePool.length) }, (_, index) =>
+        practicePool[(practiceOffset + index) % practicePool.length],
+      )
+    : [];
 
   // 新闻语料是可选层；即使实时抓取暂时超时，固定学习内容也必须可用。
   let liveError = false;
@@ -69,8 +83,22 @@ export default async function EnglishPage({
 
       <SectionHeader eyebrow="Practice First" title={`职场英语学习库 · ${practiceTotal} 条`} />
       <p className="en-sub-note">
-        这些是跨国公司、科技公司、消费品牌和咨询团队常见的工作表达，不是某一家公司的内部黑话；先从你当前需要的模块开始。
+        这些是跨国公司、科技公司、消费品牌和咨询团队常见的工作表达，不是某一家公司的内部黑话；先从今天的 3 句开始，再按场景完整练习。
       </p>
+      <section className="en-daily-practice">
+        <div className="en-daily-head">
+          <div>
+            <span className="en-daily-kicker">TODAY&apos;S PRACTICE</span>
+            <h2>今天先练 3 句</h2>
+          </div>
+          <span className="en-daily-note">复制后直接放进会议、邮件或笔记里</span>
+        </div>
+        <div className="en-daily-grid">
+          {todayPractice.map(({ moduleTitle, item }) => (
+            <EnglishPracticeCard key={item.id} moduleTitle={moduleTitle} item={item} compact />
+          ))}
+        </div>
+      </section>
       <div className="en-module-grid" style={{ marginTop: 12 }}>
         {ENGLISH_PRACTICE_MODULES.map((module) => (
           <a className="en-module-card" key={module.id} href={`#practice-${module.id}`}>
@@ -95,17 +123,17 @@ export default async function EnglishPage({
               </span>
               <em>{module.phrases.length} 条表达</em>
             </summary>
+            {PRACTICE_WORKFLOWS[module.id]?.length ? (
+              <div className="en-workflow">
+                <span className="en-workflow-label">实战路线</span>
+                <ol>
+                  {PRACTICE_WORKFLOWS[module.id].map((step) => <li key={step}>{step}</li>)}
+                </ol>
+              </div>
+            ) : null}
             <div className="en-phrase-grid">
               {module.phrases.map((item) => (
-                <article className="en-phrase-card" key={item.id}>
-                  <div className="en-phrase-head">
-                    <span className="en-phrase">{item.phrase}</span>
-                    <span className="en-phrase-meaning">{item.meaning}</span>
-                  </div>
-                  <p className="en-phrase-scenario">{item.scenario}</p>
-                  <div className="en-phrase-example">“{item.example}”</div>
-                  <p className="en-phrase-tip">{item.tip}</p>
-                </article>
+                <EnglishPracticeCard key={item.id} moduleTitle={module.title} item={item} />
               ))}
             </div>
           </details>

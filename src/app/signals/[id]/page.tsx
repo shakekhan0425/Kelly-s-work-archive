@@ -8,6 +8,7 @@ import FavoriteButton from "@/components/archive/FavoriteButton";
 import { ReadingTracker } from "@/components/archive/ReadingTracker";
 import { BackButton } from "@/components/archive/BackButton";
 import ImageWithFallback from "@/components/archive/ImageWithFallback";
+import ShareCardBuilder from "@/components/archive/ShareCardBuilder";
 import {
   getItemByIdLive,
   getRelated,
@@ -81,6 +82,17 @@ export default async function SignalDetail({ params }: { params: Promise<{ id: s
             ) : null}
             {item.lang === "en" ? <span className="stamp stamp-lav">EN</span> : null}
           </div>
+          <ShareCardBuilder
+            kind="signal"
+            title={item.title}
+            summary={item.summary}
+            sourceName={item.sourceName}
+            publishedAt={item.publishedAt ? formatDate(item.publishedAt) : undefined}
+            topics={item.topics}
+            context={context}
+            takeaways={card.marketingInsight?.takeaways}
+            english={biz.examples.map((example) => ({ term: example.term, sentence: example.sentence }))}
+          />
           {item.hero ? (
             <ImageWithFallback
               src={item.hero}

@@ -168,5 +168,19 @@ export const ENGLISH_PRACTICE_MODULES: EnglishPracticeModule[] = [
   },
 ];
 
+/** 把词卡放回真实工作流，帮助用户按顺序练习，而不是只记单词。 */
+export const PRACTICE_WORKFLOWS: Record<string, string[]> = {
+  "daily-workplace": ["先说明变化", "给出影响或下一步", "约定何时再次同步"],
+  meetings: ["开场说明议程", "对齐目标和判断标准", "收尾确认 owner 与 action items"],
+  email: ["说明背景和目的", "提出明确请求与截止时间", "确认附件、抄送和下一步"],
+  reporting: ["先说结论", "用数据解释原因", "最后给出 next steps"],
+  project: ["确认范围与依赖", "暴露 blocker 和 trade-off", "指定 owner、时间和决策点"],
+  "cross-functional": ["识别关键 stakeholder", "争取 buy-in 和资源", "必要时升级决策"],
+  "feedback-negotiation": ["先承接对方观点", "用事实提出 push-back", "回到共同目标和方案"],
+  acronyms: ["先判断缩写的场景", "明确是否需要对方行动", "跨时区沟通时补充时间"],
+  "hiring-performance": ["说明岗位或目标", "用结果描述贡献", "确认发展路径和下一周期"],
+  "marketing-brand": ["先定义消费者问题", "连接 positioning 与证据", "说明指标、取舍和下一步"],
+};
+
 /** 兼容旧的扁平读取方式；页面使用上面的模块化结构。 */
 export const ENGLISH_PRACTICE = ENGLISH_PRACTICE_MODULES.flatMap((module) => module.phrases);
